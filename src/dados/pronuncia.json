@@ -1,0 +1,674 @@
+{
+  "_leia_me": [
+    "TABELA DE PRONÚNCIA do Caderno Prática.",
+    "A tela mostra a sílaba como no caderno; a voz do aparelho recebe o texto desta tabela.",
+    "silabas: \"PA\": \"pá\" quer dizer: a tela mostra PA e a voz lê pá.",
+    "Quando a sílaba tem E ou O, há duas formas: \"aberta\" (pé, pó) e \"fechada\" (pê, pô).",
+    "O professor escolhe aberta ou fechada nas configurações do modo professor.",
+    "letras: \"nome\" é falado nas teclas; \"fala\" é falado quando a letra aparece sozinha (nome + exemplo).",
+    "palavras: palavras e siglas que a voz lê mal (ex.: IFCE).",
+    "Para corrigir: troque o texto entre aspas e salve. O comando \"npm run pronuncia\" só acrescenta o que falta; nunca apaga correções.",
+    "Também dá para corrigir dentro do app: modo professor → Gravações → Editar fala."
+  ],
+  "silabas": {
+    "A": "á",
+    "AI": "ai",
+    "AL": "ál",
+    "AM": "ã",
+    "AN": "ã",
+    "ÃO": "ão",
+    "AR": "ár",
+    "AS": "ás",
+    "AU": "au",
+    "BA": "bá",
+    "BÃO": "bão",
+    "BAR": "bár",
+    "BE": {
+      "aberta": "bé",
+      "fechada": "bê"
+    },
+    "BI": "bí",
+    "BLA": "blá",
+    "BLU": "blú",
+    "BO": {
+      "aberta": "bó",
+      "fechada": "bô"
+    },
+    "BRA": "brá",
+    "BU": "bú",
+    "CA": "cá",
+    "ÇA": "sá",
+    "CAI": "cai",
+    "CAL": "cál",
+    "CAM": "cã",
+    "CAR": "cár",
+    "CE": {
+      "aberta": "cé",
+      "fechada": "cê"
+    },
+    "CÊ": "cê",
+    "CHA": "chá",
+    "CHÃO": "chão",
+    "CHE": {
+      "aberta": "ché",
+      "fechada": "chê"
+    },
+    "CHEI": "chei",
+    "CHI": "chí",
+    "CHO": {
+      "aberta": "chó",
+      "fechada": "chô"
+    },
+    "CHU": "chú",
+    "CI": "cí",
+    "CLA": "clá",
+    "CLE": {
+      "aberta": "clé",
+      "fechada": "clê"
+    },
+    "CLI": "clí",
+    "CO": {
+      "aberta": "có",
+      "fechada": "cô"
+    },
+    "ÇO": {
+      "aberta": "só",
+      "fechada": "sô"
+    },
+    "COM": "com",
+    "COR": {
+      "aberta": "cór",
+      "fechada": "côr"
+    },
+    "CRE": {
+      "aberta": "cré",
+      "fechada": "crê"
+    },
+    "CU": "cú",
+    "ÇU": "sú",
+    "DA": "dá",
+    "DE": {
+      "aberta": "dé",
+      "fechada": "dê"
+    },
+    "DEI": "dei",
+    "DI": "dí",
+    "DO": {
+      "aberta": "dó",
+      "fechada": "dô"
+    },
+    "DRA": "drá",
+    "DRI": "drí",
+    "DU": "dú",
+    "E": {
+      "aberta": "é",
+      "fechada": "ê"
+    },
+    "EI": "ei",
+    "EL": {
+      "aberta": "él",
+      "fechada": "êl"
+    },
+    "EM": "em",
+    "EN": "em",
+    "ER": {
+      "aberta": "ér",
+      "fechada": "êr"
+    },
+    "ES": {
+      "aberta": "és",
+      "fechada": "ês"
+    },
+    "EU": "eu",
+    "FA": "fá",
+    "FAI": "fai",
+    "FE": {
+      "aberta": "fé",
+      "fechada": "fê"
+    },
+    "FÉ": "fé",
+    "FEI": "fei",
+    "FER": {
+      "aberta": "fér",
+      "fechada": "fêr"
+    },
+    "FES": {
+      "aberta": "fés",
+      "fechada": "fês"
+    },
+    "FI": "fí",
+    "FLA": "flá",
+    "FLI": "flí",
+    "FLO": {
+      "aberta": "fló",
+      "fechada": "flô"
+    },
+    "FLOR": "flor",
+    "FO": {
+      "aberta": "fó",
+      "fechada": "fô"
+    },
+    "FOR": {
+      "aberta": "fór",
+      "fechada": "fôr"
+    },
+    "FRO": {
+      "aberta": "fró",
+      "fechada": "frô"
+    },
+    "FRU": "frú",
+    "FU": "fú",
+    "GA": "gá",
+    "GAR": "gár",
+    "GE": {
+      "aberta": "gé",
+      "fechada": "gê"
+    },
+    "GI": "gí",
+    "GLO": {
+      "aberta": "gló",
+      "fechada": "glô"
+    },
+    "GO": {
+      "aberta": "gó",
+      "fechada": "gô"
+    },
+    "GOU": "gou",
+    "GRA": "grá",
+    "GRAN": "grã",
+    "GU": "gú",
+    "GUA": "guá",
+    "GUE": {
+      "aberta": "gué",
+      "fechada": "guê"
+    },
+    "GUEI": "guei",
+    "GUI": "guí",
+    "HA": "á",
+    "HE": {
+      "aberta": "é",
+      "fechada": "ê"
+    },
+    "HI": "í",
+    "HO": {
+      "aberta": "ó",
+      "fechada": "ô"
+    },
+    "HU": "ú",
+    "I": "í",
+    "Í": "í",
+    "IA": "iá",
+    "IE": {
+      "aberta": "ié",
+      "fechada": "iê"
+    },
+    "IL": "íl",
+    "IM": "im",
+    "IN": "im",
+    "IO": {
+      "aberta": "ió",
+      "fechada": "iô"
+    },
+    "IR": "ír",
+    "IS": "ís",
+    "JA": "já",
+    "JÁ": "já",
+    "JÃO": "jão",
+    "JE": {
+      "aberta": "jé",
+      "fechada": "jê"
+    },
+    "JEI": "jei",
+    "JI": "jí",
+    "JO": {
+      "aberta": "jó",
+      "fechada": "jô"
+    },
+    "JOI": {
+      "aberta": "jói",
+      "fechada": "jôi"
+    },
+    "JU": "jú",
+    "KA": "cá",
+    "LA": "lá",
+    "LÃO": "lão",
+    "LE": {
+      "aberta": "lé",
+      "fechada": "lê"
+    },
+    "LEI": "lei",
+    "LHA": "lhá",
+    "LHE": {
+      "aberta": "lhé",
+      "fechada": "lhê"
+    },
+    "LHI": "lhí",
+    "LHO": {
+      "aberta": "lhó",
+      "fechada": "lhô"
+    },
+    "LHU": "lhú",
+    "LI": "lí",
+    "LIM": "lim",
+    "LIS": "lís",
+    "LO": {
+      "aberta": "ló",
+      "fechada": "lô"
+    },
+    "LU": "lú",
+    "MA": "má",
+    "MÃO": "mão",
+    "MAR": "mar",
+    "MAS": "mas",
+    "ME": {
+      "aberta": "mé",
+      "fechada": "mê"
+    },
+    "MÉ": "mé",
+    "MEI": "mei",
+    "MEL": "mel",
+    "MI": "mí",
+    "MO": {
+      "aberta": "mó",
+      "fechada": "mô"
+    },
+    "MOR": {
+      "aberta": "mór",
+      "fechada": "môr"
+    },
+    "MU": "mú",
+    "NA": "ná",
+    "NÃO": "não",
+    "NE": {
+      "aberta": "né",
+      "fechada": "nê"
+    },
+    "NHA": "nhá",
+    "NHÃO": "nhão",
+    "NHE": {
+      "aberta": "nhé",
+      "fechada": "nhê"
+    },
+    "NHEI": "nhei",
+    "NHI": "nhí",
+    "NHO": {
+      "aberta": "nhó",
+      "fechada": "nhô"
+    },
+    "NHU": "nhú",
+    "NI": "ní",
+    "NO": {
+      "aberta": "nó",
+      "fechada": "nô"
+    },
+    "NOI": {
+      "aberta": "nói",
+      "fechada": "nôi"
+    },
+    "NU": "nú",
+    "O": {
+      "aberta": "ó",
+      "fechada": "ô"
+    },
+    "OI": {
+      "aberta": "ói",
+      "fechada": "ôi"
+    },
+    "OL": {
+      "aberta": "ól",
+      "fechada": "ôl"
+    },
+    "OM": "om",
+    "ON": "om",
+    "OR": {
+      "aberta": "ór",
+      "fechada": "ôr"
+    },
+    "OS": {
+      "aberta": "ós",
+      "fechada": "ôs"
+    },
+    "OU": "ou",
+    "PA": "pá",
+    "PAI": "pai",
+    "PÃO": "pão",
+    "PAS": "pás",
+    "PE": {
+      "aberta": "pé",
+      "fechada": "pê"
+    },
+    "PÉ": "pé",
+    "PEI": "pei",
+    "PI": "pí",
+    "PLA": "plá",
+    "PLAN": "plã",
+    "PO": {
+      "aberta": "pó",
+      "fechada": "pô"
+    },
+    "POI": {
+      "aberta": "pói",
+      "fechada": "pôi"
+    },
+    "PON": "pom",
+    "POR": {
+      "aberta": "pór",
+      "fechada": "pôr"
+    },
+    "POU": "pou",
+    "PRA": "prá",
+    "PRE": {
+      "aberta": "pré",
+      "fechada": "prê"
+    },
+    "PU": "pú",
+    "QUA": "quá",
+    "QUE": {
+      "aberta": "qué",
+      "fechada": "quê"
+    },
+    "QUEI": "quei",
+    "QUI": "quí",
+    "RA": "rá",
+    "RE": {
+      "aberta": "ré",
+      "fechada": "rê"
+    },
+    "REI": "rei",
+    "RI": "rí",
+    "RO": {
+      "aberta": "ró",
+      "fechada": "rô"
+    },
+    "ROU": "rou",
+    "RRA": "rá",
+    "RRE": {
+      "aberta": "ré",
+      "fechada": "rê"
+    },
+    "RRI": "rí",
+    "RRO": {
+      "aberta": "ró",
+      "fechada": "rô"
+    },
+    "RRU": "rú",
+    "RU": "rú",
+    "SA": "sá",
+    "SÁ": "sá",
+    "SAI": "sai",
+    "SE": {
+      "aberta": "sé",
+      "fechada": "sê"
+    },
+    "SEI": "sei",
+    "SI": "sí",
+    "SO": {
+      "aberta": "só",
+      "fechada": "sô"
+    },
+    "SOL": "sol",
+    "SON": "som",
+    "SOU": "sou",
+    "SSA": "sá",
+    "SSE": {
+      "aberta": "sé",
+      "fechada": "sê"
+    },
+    "SSI": "sí",
+    "SSO": {
+      "aberta": "só",
+      "fechada": "sô"
+    },
+    "SSU": "sú",
+    "SU": "sú",
+    "TA": "tá",
+    "TAR": "tár",
+    "TE": {
+      "aberta": "té",
+      "fechada": "tê"
+    },
+    "TEM": "tem",
+    "TER": {
+      "aberta": "tér",
+      "fechada": "têr"
+    },
+    "TI": "tí",
+    "TO": {
+      "aberta": "tó",
+      "fechada": "tô"
+    },
+    "TOR": {
+      "aberta": "tór",
+      "fechada": "tôr"
+    },
+    "TOS": {
+      "aberta": "tós",
+      "fechada": "tôs"
+    },
+    "TRA": "trá",
+    "TRE": {
+      "aberta": "tré",
+      "fechada": "trê"
+    },
+    "TRÊS": "três",
+    "TU": "tú",
+    "U": "ú",
+    "UA": "uá",
+    "UE": {
+      "aberta": "ué",
+      "fechada": "uê"
+    },
+    "UI": "ui",
+    "UL": "úl",
+    "UM": "um",
+    "UN": "um",
+    "UO": {
+      "aberta": "uó",
+      "fechada": "uô"
+    },
+    "UR": "úr",
+    "US": "ús",
+    "VA": "vá",
+    "VAS": "vás",
+    "VE": {
+      "aberta": "vé",
+      "fechada": "vê"
+    },
+    "VEI": "vei",
+    "VEN": "vem",
+    "VI": "ví",
+    "VO": {
+      "aberta": "vó",
+      "fechada": "vô"
+    },
+    "VÓ": "vó",
+    "VÔ": "vô",
+    "VRO": {
+      "aberta": "vró",
+      "fechada": "vrô"
+    },
+    "VU": "vú",
+    "WIL": "uíl",
+    "XA": "xá",
+    "XE": {
+      "aberta": "xé",
+      "fechada": "xê"
+    },
+    "XI": "xí",
+    "XO": {
+      "aberta": "xó",
+      "fechada": "xô"
+    },
+    "XU": "xú",
+    "ZA": "zá",
+    "ZE": {
+      "aberta": "zé",
+      "fechada": "zê"
+    },
+    "ZEI": "zei",
+    "ZI": "zí",
+    "ZO": {
+      "aberta": "zó",
+      "fechada": "zô"
+    },
+    "ZU": "zú"
+  },
+  "letras": {
+    "A": {
+      "nome": "á",
+      "fala": "á, de água"
+    },
+    "B": {
+      "nome": "bê",
+      "fala": "bê, de bola"
+    },
+    "C": {
+      "nome": "cê",
+      "fala": "cê, de casa"
+    },
+    "D": {
+      "nome": "dê",
+      "fala": "dê, de dado"
+    },
+    "E": {
+      "nome": "é",
+      "fala": "é, de elevador"
+    },
+    "F": {
+      "nome": "éfe",
+      "fala": "éfe, de faca"
+    },
+    "G": {
+      "nome": "gê",
+      "fala": "gê, de gota"
+    },
+    "H": {
+      "nome": "agá",
+      "fala": "agá, de hora"
+    },
+    "I": {
+      "nome": "í",
+      "fala": "í, de igreja"
+    },
+    "J": {
+      "nome": "jóta",
+      "fala": "jóta, de jogo"
+    },
+    "K": {
+      "nome": "cá",
+      "fala": "cá, de Karina"
+    },
+    "L": {
+      "nome": "éle",
+      "fala": "éle, de lua"
+    },
+    "M": {
+      "nome": "ême",
+      "fala": "ême, de mala"
+    },
+    "N": {
+      "nome": "ene",
+      "fala": "ene, de nome"
+    },
+    "O": {
+      "nome": "ó",
+      "fala": "ó, de olho"
+    },
+    "P": {
+      "nome": "pê",
+      "fala": "pê, de pai"
+    },
+    "Q": {
+      "nome": "quê",
+      "fala": "quê, de queijo"
+    },
+    "R": {
+      "nome": "érre",
+      "fala": "érre, de rua"
+    },
+    "S": {
+      "nome": "ésse",
+      "fala": "ésse, de sala"
+    },
+    "T": {
+      "nome": "tê",
+      "fala": "tê, de tia"
+    },
+    "U": {
+      "nome": "ú",
+      "fala": "ú, de unha"
+    },
+    "V": {
+      "nome": "vê",
+      "fala": "vê, de vela"
+    },
+    "W": {
+      "nome": "dáblio",
+      "fala": "dáblio, de Wilson"
+    },
+    "X": {
+      "nome": "xis",
+      "fala": "xis, de xícara"
+    },
+    "Y": {
+      "nome": "ípsilon",
+      "fala": "ípsilon, de Yara"
+    },
+    "Z": {
+      "nome": "zê",
+      "fala": "zê, de zero"
+    },
+    "Ç": {
+      "nome": "cê cedilha",
+      "fala": "cê cedilha, como em moça"
+    },
+    "Á": {
+      "nome": "á com acento agudo",
+      "fala": "á com acento agudo, como em água"
+    },
+    "É": {
+      "nome": "é com acento agudo",
+      "fala": "é com acento agudo, como em café"
+    },
+    "Í": {
+      "nome": "í com acento agudo",
+      "fala": "í com acento agudo, como em saída"
+    },
+    "Ó": {
+      "nome": "ó com acento agudo",
+      "fala": "ó com acento agudo, como em avó"
+    },
+    "Ú": {
+      "nome": "ú com acento agudo",
+      "fala": "ú com acento agudo, como em saúde"
+    },
+    "Â": {
+      "nome": "â com acento circunflexo",
+      "fala": "â com acento circunflexo, como em lâmpada"
+    },
+    "Ê": {
+      "nome": "ê com acento circunflexo",
+      "fala": "ê com acento circunflexo, como em você"
+    },
+    "Ô": {
+      "nome": "ô com acento circunflexo",
+      "fala": "ô com acento circunflexo, como em avô"
+    },
+    "Ã": {
+      "nome": "ã, com til",
+      "fala": "ã, com til, como em mão"
+    },
+    "Õ": {
+      "nome": "õ, com til",
+      "fala": "õ, com til, como em limões"
+    }
+  },
+  "palavras": {
+    "IFCE": "í éfe cê é",
+    "KG": "quilo",
+    "KM": "quilômetro",
+    "ML": "mililitro",
+    "QTD": "quantidade",
+    "WI-FI": "uai fai"
+  }
+}
