@@ -1,7 +1,7 @@
 // Liga cada tipo de atividade à sua tela.
 
 import type { Atividade } from '../tipos';
-import { resultadoComoTexto } from '../../conteudo/contas';
+import { combinacaoExata, resultadoComoTexto } from '../../conteudo/contas';
 import type { Contexto, Controle } from './contrato';
 import {
   montarCompletePalavra,
@@ -34,7 +34,7 @@ function respostaParaTeste(a: Atividade): unknown {
     case 'conta':
       return [...resultadoComoTexto(a.resultado)];
     case 'pague':
-      return a.preco;
+      return combinacaoExata(a.preco, a.dinheiro);
     case 'ligue':
     case 'maiuscula':
       return a.pares;

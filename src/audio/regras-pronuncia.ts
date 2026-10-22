@@ -23,6 +23,10 @@ function ataqueParaFala(ataque: string): string {
     case 'SS':
     case 'Ç':
       return 's';
+    case 'Y': // YARA: "iá"
+      return 'i';
+    case 'W': // WILSON: "uíl"
+      return 'u';
     default:
       return ataque.toLowerCase();
   }
@@ -39,7 +43,7 @@ export function falaAutomaticaDaSilaba(silaba: string, vogal: Vogal): string {
     const m = s.match(/^(RR|SS|Ç|H)?(.*)$/)!;
     return (ataqueParaFala(m[1] ?? '') + m[2].toLowerCase()).normalize('NFC');
   }
-  const m = s.match(/^(CH|LH|NH|QU|GU|RR|SS|[BCDFGJKLMNPRSTVWXZÇH]{0,2})([AEIOUY]+)([^AEIOUY]*)$/);
+  const m = s.match(/^(CH|LH|NH|QU|GU|RR|SS|[BCDFGJKLMNPRSTVWXYZÇH]{0,2})([AEIOU]+)([^AEIOU]*)$/);
   if (!m) return s.toLowerCase();
   const [, ataque, vogais, coda] = m;
   const inicio = ataqueParaFala(ataque);

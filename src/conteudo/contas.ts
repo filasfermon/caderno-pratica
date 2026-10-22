@@ -158,3 +158,19 @@ export function dinheiroParaPagar(preco: number): number[] {
   if (preco % 100 !== 0) moedas.push(...MOEDAS.filter((m) => m < 100 && (m !== 5 || preco % 10 !== 0)));
   return [...notas, ...moedas];
 }
+
+/**
+ * Uma forma certa de juntar o valor com as notas e moedas oferecidas (a com menos peças).
+ * Usada na demonstração e para mostrar a resposta. Devolve null se não houver.
+ */
+export function combinacaoExata(valor: number, disponiveis: number[]): number[] | null {
+  const melhor: (number[] | null)[] = Array(valor + 1).fill(null);
+  melhor[0] = [];
+  for (let v = 1; v <= valor; v++) {
+    for (const d of disponiveis) {
+      const antes = v - d >= 0 ? melhor[v - d] : null;
+      if (antes && (!melhor[v] || antes.length + 1 < melhor[v]!.length)) melhor[v] = [...antes, d];
+    }
+  }
+  return melhor[valor] ? [...melhor[valor]!].sort((a, b) => b - a) : null;
+}

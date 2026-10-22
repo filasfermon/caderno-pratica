@@ -18,7 +18,7 @@ import type {
   Tutorial,
 } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
-import { botaoOuvirDeNovo, criarEscolha, criarMontagem, criarOucaERepita, tocavel } from './comum';
+import { botaoOuvirDeNovo, classeDasColunas, criarEscolha, criarMontagem, criarOucaERepita, tocavel } from './comum';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
 
@@ -78,11 +78,10 @@ export function montarConheca(a: Conheca, ctx: Contexto): Controle {
 export function montarEscute(a: EscuteSilaba | EscutePalavra, ctx: Contexto): Controle {
   const categoria: ItemAudio['categoria'] = a.categoria === 'letra' ? 'letra' : a.categoria === 'silaba' ? 'silaba' : 'palavra';
   const item = itemDe(a.alvo, categoria);
-  const longas = a.opcoes.some((o) => o.length > 5);
   const { grade, escolha } = criarEscolha(
     ctx,
     a.opcoes.map((o) => ({ conteudo: o, certa: o === a.alvo, classe: 'leitura' })),
-    longas ? 'uma-coluna' : '',
+    classeDasColunas(a.opcoes),
   );
   ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), grade);
   return {
@@ -214,13 +213,17 @@ export function montarMonteSilaba(a: MonteSilaba, ctx: Contexto): Controle {
 
 export function montarCompletePalavra(a: CompletePalavra, ctx: Contexto): Controle {
   const item = itemDe(a.palavra, 'palavra');
-  const lacuna = el('span', { class: 'lacuna', 'aria-label': 'sílaba que falta' }, ' ');
+  const lacuna = el('span', { class: 'lacuna' }, ' ');
   const palavra = el(
     'div',
     { class: 'palavra-com-lacuna leitura-gigante', style: { fontSize: a.silabas.length > 3 ? '3rem' : undefined } },
-    ...a.silabas.map((s, i) => (i === a.falta ? lacuna : el('span', {}, s))),
+    ...a.silabas.map((s, i) => (i === a.falta ? el('span', {}, el('span', { class: 'visualmente-oculto' }, 'sílaba que falta:'), lacuna) : el('span', {}, s))),
   );
-  const { grade, escolha } = criarEscolha(ctx, a.opcoes.map((o) => ({ conteudo: o, certa: o === a.silabas[a.falta], classe: 'leitura' })));
+  const { grade, escolha } = criarEscolha(
+    ctx,
+    a.opcoes.map((o) => ({ conteudo: o, certa: o === a.silabas[a.falta], classe: 'leitura' })),
+    classeDasColunas(a.opcoes),
+  );
   ctx.area.append(el('div', { class: 'cartaz' }, palavra), botaoOuvirDeNovo(() => void ctx.falar(item)), grade);
   const preencher = () => {
     lacuna.textContent = a.silabas[a.falta];

@@ -282,7 +282,7 @@ function telaPacote(): void {
       document.body.append(link);
       link.click();
       link.remove();
-      mostrar(`PACOTE PRONTO: ${quantidade} ÁUDIOS. O ARQUIVO FOI PARA A PASTA DE DOWNLOADS.`);
+      mostrar(`PACOTE PRONTO: ${quantidade} ${quantidade === 1 ? 'ÁUDIO' : 'ÁUDIOS'}. O ARQUIVO FOI PARA A PASTA DE DOWNLOADS.`);
     } catch (e) {
       mostrar('NÃO FOI POSSÍVEL EXPORTAR: ' + (e as Error).message);
     }
@@ -295,7 +295,7 @@ function telaPacote(): void {
     try {
       const r = await importarPacote(arquivo);
       await carregarCorrecoes();
-      mostrar(`PACOTE IMPORTADO: ${r.audios} ÁUDIOS E ${r.falas} CORREÇÕES DE FALA.`);
+      mostrar(`PACOTE IMPORTADO: ${r.audios} ${r.audios === 1 ? 'ÁUDIO' : 'ÁUDIOS'} E ${r.falas} ${r.falas === 1 ? 'CORREÇÃO' : 'CORREÇÕES'} DE FALA.`);
     } catch (e) {
       mostrar('NÃO FOI POSSÍVEL IMPORTAR: ' + (e as Error).message);
     }

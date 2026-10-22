@@ -8,7 +8,7 @@ import type { Conta, Conte, Da, Hora, Pague, Troco } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
 import { botaoOuvirDeNovo, criarEscolha } from './comum';
 import { decompor, desenharDinheiro, desenharEmDezEUm, desenharQuantidade, desenharRelogio } from '../../ui/desenhos';
-import { formatarReais, resultadoComoTexto } from '../../conteudo/contas';
+import { combinacaoExata, formatarReais, resultadoComoTexto } from '../../conteudo/contas';
 import { animacoesLigadas } from '../../dados/config';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
@@ -185,12 +185,7 @@ export function montarPague(a: Pague, ctx: Contexto): Controle {
     pronto,
   );
   // Uma forma certa de pagar (para a demonstração e para mostrar a resposta).
-  const jeitoCerto = () => {
-    const r: number[] = [];
-    let resto = a.preco;
-    for (const v of [...a.dinheiro].sort((x, y) => y - x)) while (resto >= v) (r.push(v), (resto -= v));
-    return r;
-  };
+  const jeitoCerto = () => combinacaoExata(a.preco, a.dinheiro) ?? [];
   return {
     modelo: () => ctx.falar(item),
     reiniciar: () => {

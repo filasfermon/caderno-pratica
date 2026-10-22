@@ -54,7 +54,8 @@ export function palavrasDaAula(aula: Aula): string[] {
   return semRepetidos(
     brutas
       .map((p) => formatarParaAula(p.trim(), aula))
-      .filter((p) => ehPalavraSimples(p) && p.length > 1),
+      // Só palavras com vogal (siglas como KG não se dividem em sílabas).
+      .filter((p) => ehPalavraSimples(p) && p.length > 1 && /[AEIOUÁÉÍÓÚÂÊÔÃÕ]/i.test(p)),
   );
 }
 

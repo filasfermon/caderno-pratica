@@ -21,7 +21,7 @@ export function telaProgresso(): void {
       return el(
         'div',
         { class: 'unidade-progresso' },
-        el('h3', {}, `UNIDADE ${u} · ${nome}`),
+        el('h2', {}, `UNIDADE ${u} · ${nome}`),
         el(
           'ul',
           { class: 'linhas-progresso' },

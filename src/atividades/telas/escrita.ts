@@ -5,7 +5,7 @@ import type { ItemAudio } from '../../audio/pronuncia';
 import { falar, falarEmSequencia } from '../../audio/voz';
 import type { CompleteFrase, Escreva, Ligue, Maiuscula } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
-import { botaoOuvirDeNovo, criarEscolha } from './comum';
+import { botaoOuvirDeNovo, classeDasColunas, criarEscolha } from './comum';
 import { criarPecas } from './leitura';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
@@ -45,7 +45,7 @@ export function montarEscreva(a: Escreva, ctx: Contexto): Controle {
 export function montarCompleteFrase(a: CompleteFrase, ctx: Contexto): Controle {
   const comLacuna = itemDe(a.frase, 'frase');
   const completa = itemDe(a.frase.replace('____', a.resposta), 'frase');
-  const lacuna = el('span', { class: 'lacuna', 'aria-label': 'espaço para completar' }, ' ');
+  const lacuna = el('span', { class: 'lacuna' }, ' ');
   const partes = a.frase.split('____');
   const fraseEl = el('p', { class: 'frase-grande' });
   partes.forEach((parte, i) => {
@@ -56,16 +56,13 @@ export function montarCompleteFrase(a: CompleteFrase, ctx: Contexto): Controle {
         if (/^[.,!?;:]$/.test(p)) fraseEl.append(p);
         else fraseEl.append(' ', el('button', { type: 'button', class: 'tocavel', onclick: () => falar(itemDe(p.replace(/[.,!?;:]/g, ''), 'palavra')) }, p), ' ');
       });
-    if (i < partes.length - 1) fraseEl.append(' ', lacuna, ' ');
+    if (i < partes.length - 1) fraseEl.append(' ', el('span', { class: 'visualmente-oculto' }, 'espaço para completar:'), lacuna, ' ');
   });
   const { grade, escolha } = criarEscolha(
     ctx,
-    a.opcoes.map((o) => ({ conteudo: o, certa: o === a.resposta, classe: o.length <= 6 ? 'leitura' : '' })),
-    a.opcoes.some((o) => o.length > 6) ? 'uma-coluna' : '',
+    a.opcoes.map((o) => ({ conteudo: o, certa: o === a.resposta, classe: 'leitura' })),
+    classeDasColunas(a.opcoes),
   );
-  escolha.botoes.forEach((b) => {
-    if (!b.classList.contains('leitura')) b.style.fontSize = '1.7rem';
-  });
   ctx.area.append(el('div', { class: 'cartaz' }, fraseEl), botaoOuvirDeNovo(() => void ctx.falar(comLacuna)), grade);
   const preencher = () => {
     lacuna.textContent = a.resposta;

@@ -1,7 +1,7 @@
 // Funções pequenas para lidar com textos.
 
 /** Vogais do português, com e sem acento (maiúsculas). */
-export const VOGAIS = 'AEIOUÁÉÍÓÚÂÊÔÃÕÀY';
+export const VOGAIS = 'AEIOUÁÉÍÓÚÂÊÔÃÕÀ';
 
 export function ehVogal(letra: string): boolean {
   return VOGAIS.includes(letra.toUpperCase());

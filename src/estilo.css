@@ -169,6 +169,7 @@ button,
 }
 .botao.principal small {
   color: #fff;
+  font-size: 1.1rem; /* texto branco no laranja: grande e em negrito (contraste AA para texto grande) */
 }
 .botao small {
   display: block;
@@ -255,7 +256,6 @@ button,
 }
 .marca h1 {
   font-size: 1.35rem;
-  white-space: nowrap;
 }
 .marca p {
   margin: 0;
@@ -499,6 +499,9 @@ button,
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
 }
+.opcao {
+  overflow-wrap: anywhere;
+}
 .opcoes.uma-coluna {
   grid-template-columns: 1fr;
 }
@@ -712,11 +715,11 @@ button,
 /* Teclados */
 .teclado {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 .teclado.silabas {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .teclado .tecla {
   min-height: 60px;
@@ -999,7 +1002,7 @@ details.parte summary {
   font-size: 1.15rem;
   cursor: pointer;
 }
-.unidade-progresso h3 {
+.unidade-progresso h2 {
   font-size: 1rem;
   margin: 10px 0 6px;
   text-transform: uppercase;
@@ -1186,7 +1189,7 @@ details.parte summary {
   background: var(--destaque);
   border-color: var(--destaque);
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 .carregando {
   flex: 1;

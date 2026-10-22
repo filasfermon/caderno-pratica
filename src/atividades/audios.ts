@@ -19,7 +19,7 @@ export function audiosDaAtividade(a: Atividade): ItemAudio[] {
       return [];
     case 'conheca': {
       const cat = a.categoria === 'par' || a.categoria === 'letra' ? 'letra' : a.categoria === 'silaba' ? 'silaba' : 'palavra';
-      return [i(cat, a.alvo), ...(a.silabas ?? []).map((s) => i('silaba', s))];
+      return [i(cat, a.alvo), ...(a.silabas && a.silabas.length > 1 ? a.silabas.map((s) => i('silaba', s)) : [])];
     }
     case 'escute_silaba':
       return [i(a.categoria, a.alvo)];

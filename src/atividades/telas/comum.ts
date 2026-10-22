@@ -6,6 +6,7 @@ import type { ItemAudio } from '../../audio/pronuncia';
 import { falar, pararFala, tocarAudio } from '../../audio/voz';
 import { comecarGravacao, podeGravar, type GravadorAtivo } from '../../audio/gravador';
 import type { Contexto } from './contrato';
+import { config } from '../../dados/config';
 
 /** Texto que, tocado, é lido em voz alta. */
 export function tocavel(texto: string, item: ItemAudio, classe = ''): HTMLButtonElement {
@@ -30,6 +31,15 @@ export interface Escolha {
   certo: HTMLButtonElement;
   mostrarCerta(): void;
   travar(): void;
+}
+
+/**
+ * Opções com palavras compridas ficam numa coluna só, para as letras continuarem grandes
+ * (no mínimo 40 px) mesmo no celular pequeno e no "texto muito grande".
+ */
+export function classeDasColunas(opcoes: string[]): string {
+  const limite = config().tamanhoTexto === 'normal' ? 5 : 3;
+  return opcoes.some((o) => o.length > limite) ? 'uma-coluna' : '';
 }
 
 /**
