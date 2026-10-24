@@ -26,7 +26,8 @@ import {
 } from '../atividades/rotulos';
 import { falar, falarEmSequencia, pararFala } from '../audio/voz';
 import { somDeAcerto } from '../audio/sons';
-import { config, animacoesLigadas } from '../dados/config';
+import { config, animacoesLigadas, opcoesDoConteudo } from '../dados/config';
+import { aulaDisponivel } from '../atividades/disponiveis';
 import {
   iniciarSessao,
   jaViuTipo,
@@ -39,8 +40,7 @@ import { criarSorteio, sortearUm, type Sorteio } from '../util/aleatorio';
 import type { Aula } from '../conteudo/tipos';
 import { falaDaAbertura } from '../atividades/audios';
 
-const MENSAGEM_SEM_CONTEUDO =
-  'Esta aula é feita no caderno, com o professor. Aqui você pode treinar um pouco. Cada passo conta.';
+const MENSAGEM_SEM_CONTEUDO = 'Esta aula é feita só no caderno, com o professor. Escolha outra aula para praticar.';
 
 // ---------- Abertura ----------
 
@@ -51,14 +51,24 @@ export function telaAula(numero: number): void {
     mostrarTela('Aula', topo({ titulo: 'AULA', voltar: '#/escolher' }), el('p', { class: 'aviso' }, 'ESSA AULA NÃO EXISTE NO CADERNO.'));
     return;
   }
+  if (!aulaDisponivel(c, aula, opcoesDoConteudo())) {
+    // Aula da lista de exclusão ou sem atividades de reconhecimento: não há o que praticar no app.
+    mostrarTela(
+      `Aula ${aula.aula}`,
+      topo({ titulo: `AULA ${aula.aula}`, voltar: '#/escolher' }),
+      el('p', { class: 'aviso', 'data-aula-indisponivel': '' }, MENSAGEM_SEM_CONTEUDO.toLocaleUpperCase('pt-BR')),
+      el('a', { class: 'botao principal', href: '#/escolher' }, 'ESCOLHER OUTRA AULA'),
+    );
+    anunciar(MENSAGEM_SEM_CONTEUDO);
+    return;
+  }
   const sorteio = criarSorteio();
-  const previa = montarSessao(c, aula, progresso(), criarSorteio(1));
   const objetivo = aula.objetivo ? formatarParaAula(aula.objetivo, aula) : '';
-  const fala = previa.semConteudoProprio ? [falaDaAbertura(aula), MENSAGEM_SEM_CONTEUDO] : [falaDaAbertura(aula)];
+  const fala = [falaDaAbertura(aula)];
   const comecar = el('button', { type: 'button', class: 'botao principal', 'data-comecar': '' }, icones.seguir(34), 'COMEÇAR');
   comecar.addEventListener('click', () => {
     iniciarSessao(aula.aula);
-    rodarSessao(montarSessao(c, aula, progresso(), sorteio, config().atividadesPorSessao), sorteio);
+    rodarSessao(montarSessao(c, aula, progresso(), sorteio, config().atividadesPorSessao, opcoesDoConteudo()), sorteio);
   });
   mostrarTela(
     `Aula ${aula.aula}`,
@@ -69,7 +79,6 @@ export function telaAula(numero: number): void {
       el('div', { class: 'numero-aula', 'aria-hidden': 'true' }, `AULA ${aula.aula}`),
       el('div', { class: 'paginas' }, icones.livro(30), `CADERNO: ${textoPaginas(aula.paginas)}`),
       objetivo ? el('p', { class: 'objetivo' }, objetivo.toLocaleUpperCase('pt-BR')) : null,
-      previa.semConteudoProprio ? el('p', { class: 'aviso' }, MENSAGEM_SEM_CONTEUDO.toLocaleUpperCase('pt-BR')) : null,
       el('div', { style: { display: 'flex', justifyContent: 'center' } }, botaoOuvir(() => fala)),
       comecar,
     ),
@@ -232,7 +241,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       else if (ehSoDeOuvir(at)) await controle.modelo?.();
     })();
     // Conheça e Leia: se a pessoa já tocou em algo, o SEGUIR aparece mesmo assim, sem pressa.
-    if (ehSoDeOuvir(at) && at.tipo !== 'tutorial') setTimeout(() => vale() && !terminado && ctx.concluir(), 8000);
+    if (ehSoDeOuvir(at)) setTimeout(() => vale() && !terminado && ctx.concluir(), 8000);
   };
 
   void mostrarAtividade();

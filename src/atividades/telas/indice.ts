@@ -12,7 +12,7 @@ import {
   montarMonteSilaba,
   montarOrdene,
   montarQuantas,
-  montarTutorial,
+  montarDigaLetra,
 } from './leitura';
 import { montarCompleteFrase, montarEscreva, montarLigue } from './escrita';
 import { montarConta, montarConte, montarDa, montarHora, montarPague, montarTroco } from './numeros';
@@ -50,8 +50,10 @@ export function montarAtividade(a: Atividade, ctx: Contexto): Controle {
 
 function montarTela(a: Atividade, ctx: Contexto): Controle {
   switch (a.tipo) {
-    case 'tutorial':
-      return montarTutorial(a, ctx);
+    case 'escute_letra':
+      return montarEscute(a, ctx);
+    case 'diga_letra':
+      return montarDigaLetra(a, ctx);
     case 'conheca':
       return montarConheca(a, ctx);
     case 'escute_silaba':

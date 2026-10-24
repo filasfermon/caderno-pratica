@@ -148,14 +148,14 @@ export function pararGravacaoDoEstudante(): void {
  * "Ouça e repita": o estudante grava a própria leitura e ouve em seguida,
  * comparando com o modelo. Sem avaliação automática. A gravação não é guardada.
  */
-export function criarOucaERepita(modelo: () => void): HTMLElement | null {
+export function criarOucaERepita(modelo: () => void, aoGravar?: () => void): HTMLElement | null {
   if (!podeGravar()) return null;
   let gravador: GravadorAtivo | null = null;
   let minhaVoz: Blob | null = null;
   const msg = el('p', { class: 'etiqueta', 'aria-live': 'polite' });
   const gravar = el('button', { type: 'button', class: 'botao', 'aria-label': 'Gravar a minha voz' }, icones.microfone(30), 'GRAVAR');
   const ouvirMinha = el('button', { type: 'button', class: 'botao', disabled: true, 'aria-label': 'Ouvir a minha voz' }, icones.tocar(30), 'MINHA VOZ');
-  const ouvirModelo = el('button', { type: 'button', class: 'botao', 'aria-label': 'Ouvir o modelo' }, icones.altoFalante(30), 'MODELO');
+  const ouvirModelo = el('button', { type: 'button', class: 'botao', 'aria-label': 'Ouvir o modelo', 'data-ouvir-modelo': '' }, icones.altoFalante(30), 'MODELO');
   gravar.addEventListener('click', async () => {
     if (gravador) {
       const g = gravador;
@@ -167,6 +167,7 @@ export function criarOucaERepita(modelo: () => void): HTMLElement | null {
       ouvirMinha.disabled = false;
       msg.textContent = '';
       void tocarAudio(minhaVoz);
+      aoGravar?.();
       return;
     }
     try {

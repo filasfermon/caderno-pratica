@@ -6,8 +6,10 @@ import type { Atividade } from './tipos';
 /** Instrução de cada atividade. A mesma frase é escrita e falada. */
 export function instrucaoDe(a: Atividade): string {
   switch (a.tipo) {
-    case 'tutorial':
-      return 'Toque no botão laranja.';
+    case 'escute_letra':
+      return 'Escute e toque a letra certa.';
+    case 'diga_letra':
+      return 'Veja a letra e diga o nome dela.';
     case 'conheca':
       return a.categoria === 'letra' || a.categoria === 'par'
         ? 'Escute e leia a letra. Toque nela para ouvir de novo.'
@@ -15,7 +17,7 @@ export function instrucaoDe(a: Atividade): string {
           ? 'Escute e leia a sílaba. Toque nela para ouvir de novo.'
           : 'Escute e leia. Toque para ouvir de novo.';
     case 'escute_silaba':
-      return a.categoria === 'letra' ? 'Escute e toque a letra certa.' : 'Escute e toque a sílaba certa.';
+      return 'Escute e toque a sílaba certa.';
     case 'monte_silaba':
       return 'Escute e forme a sílaba. Toque nas letras na ordem certa.';
     case 'complete_palavra':
@@ -55,7 +57,7 @@ export function instrucaoDe(a: Atividade): string {
 
 /** Todas as instruções possíveis (o professor pode gravar cada uma). */
 export const TODAS_AS_INSTRUCOES = [
-  'Toque no botão laranja.',
+  'Veja a letra e diga o nome dela.',
   'Escute e leia a letra. Toque nela para ouvir de novo.',
   'Escute e leia a sílaba. Toque nela para ouvir de novo.',
   'Escute e leia. Toque para ouvir de novo.',

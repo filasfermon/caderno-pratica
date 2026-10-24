@@ -4,17 +4,20 @@
 import { el } from '../util/dom';
 import { anunciar, mostrarTela, obterConteudo, topo } from '../app';
 import { progresso } from '../dados/progresso';
+import { aulasDisponiveis } from '../atividades/disponiveis';
+import { opcoesDoConteudo } from '../dados/config';
 
 export function telaProgresso(): void {
   const c = obterConteudo();
   const p = progresso();
-  const praticadas = c.aulas.filter((a) => p.aulas[a.aula]?.vezes).length;
+  const visiveis = aulasDisponiveis(c, opcoesDoConteudo());
+  const praticadas = visiveis.filter((a) => p.aulas[a.aula]?.vezes).length;
   const fala =
     praticadas === 0
       ? 'Aqui aparecem as aulas que você praticar.'
       : `Você já praticou ${praticadas} ${praticadas === 1 ? 'aula' : 'aulas'}. Mostre esta tela ao professor.`;
-  const partes = c.partes.map((parte) => {
-    const aulasDaParte = c.aulas.filter((a) => a.parte === parte.parte);
+  const partes = c.partes.filter((parte) => visiveis.some((a) => a.parte === parte.parte)).map((parte) => {
+    const aulasDaParte = visiveis.filter((a) => a.parte === parte.parte);
     const feitas = aulasDaParte.filter((a) => p.aulas[a.aula]?.vezes).length;
     const unidades = [...new Set(aulasDaParte.map((a) => a.unidade))].map((u) => {
       const nome = c.unidades.find((x) => x.unidade === u)?.nome ?? '';

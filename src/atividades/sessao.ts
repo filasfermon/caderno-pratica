@@ -4,14 +4,15 @@
 
 import type { Aula, Conteudo } from '../conteudo/tipos';
 import type { Atividade, TipoAtividade } from './tipos';
-import { gerarCandidatas } from './gerar';
+import { atividadesDaAula, aulaDisponivel, tiposObrigatorios, OPCOES_PADRAO, type OpcoesConteudo } from './disponiveis';
 import { itensParaRevisar, type Progresso } from '../dados/progresso';
 import { embaralhar, type Sorteio } from '../util/aleatorio';
 
 /** Ordem didática: primeiro conhecer e ouvir, depois montar, escrever e ler textos. */
 const ESTAGIO: Record<TipoAtividade, number> = {
-  tutorial: 0,
   conheca: 1,
+  escute_letra: 1,
+  diga_letra: 2,
   escute_silaba: 2,
   monte_silaba: 3,
   escute_palavra: 4,
@@ -43,19 +44,17 @@ const MAXIMO: Partial<Record<TipoAtividade, number>> = {
 
 /** Tipos que servem bem para revisão (curtos). */
 const BONS_PARA_REVISAO: TipoAtividade[] = [
-  'escute_silaba', 'escute_palavra', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
+  'escute_letra', 'diga_letra', 'escute_silaba', 'escute_palavra', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
   'escreva', 'complete_frase', 'ordene', 'ligue', 'maiuscula', 'conte', 'conta', 'pague', 'troco', 'da', 'hora',
 ];
 
 export interface Sessao {
   aula: Aula;
   atividades: Atividade[];
-  /** true quando a aula não tem conteúdo para praticar no app (ex.: traços da Parte 1). */
-  semConteudoProprio: boolean;
 }
 
-/** Escolhe atividades variando os tipos (um de cada tipo por rodada). */
-function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso, s: Sorteio, sortear = true): Atividade[] {
+/** Escolhe atividades variando os tipos (um de cada tipo por rodada; os obrigatórios primeiro). */
+function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso, s: Sorteio, sortear = true, obrigatorios: TipoAtividade[] = []): Atividade[] {
   const porTipo = new Map<TipoAtividade, Atividade[]>();
   // Itens nunca vistos ou "vencidos" primeiro; dentro disso, ordem sorteada.
   const prioridade = (a: Atividade) => {
@@ -67,7 +66,8 @@ function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso,
     if (!porTipo.has(a.tipo)) porTipo.set(a.tipo, []);
     porTipo.get(a.tipo)!.push(a);
   }
-  const tipos = [...porTipo.keys()].sort((a, b) => ESTAGIO[a] - ESTAGIO[b]);
+  const peso = (t: TipoAtividade) => (obrigatorios.includes(t) ? -100 : 0) + ESTAGIO[t];
+  const tipos = [...porTipo.keys()].sort((a, b) => peso(a) - peso(b));
   const escolhidas: Atividade[] = [];
   const usadosPorTipo = new Map<TipoAtividade, number>();
   let mudou = true;
@@ -88,13 +88,22 @@ function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso,
 }
 
 /** Atividades de revisão de aulas anteriores. */
-export function escolherRevisao(c: Conteudo, aula: Aula, p: Progresso, quantas: number, s: Sorteio, evitar: Set<string>): Atividade[] {
+export function escolherRevisao(
+  c: Conteudo,
+  aula: Aula,
+  p: Progresso,
+  quantas: number,
+  s: Sorteio,
+  evitar: Set<string>,
+  op: OpcoesConteudo = OPCOES_PADRAO,
+): Atividade[] {
   if (quantas <= 0) return [];
   const cache = new Map<number, Atividade[]>();
   const candidatasDa = (n: number) => {
     if (!cache.has(n)) {
       const a = c.aulas.find((x) => x.aula === n);
-      const lista = a ? gerarCandidatas(c, a, s) : [];
+      // Aulas excluídas (ou sem atividades) não entram na revisão.
+      const lista = a && aulaDisponivel(c, a, op) ? atividadesDaAula(c, a, s, op) : [];
       // A escrita só entra a partir da Unidade 5 (vale também na revisão).
       cache.set(n, lista.filter((x) => BONS_PARA_REVISAO.includes(x.tipo) && (x.tipo !== 'escreva' || aula.unidade >= 5)));
     }
@@ -130,24 +139,17 @@ export function escolherRevisao(c: Conteudo, aula: Aula, p: Progresso, quantas: 
   return escolhidas;
 }
 
-/** Monta a sessão de uma aula. */
-export function montarSessao(c: Conteudo, aula: Aula, p: Progresso, s: Sorteio, total = 10): Sessao {
+/** Monta a sessão de uma aula. Aula sem atividades → sessão vazia (a aula nem aparece na lista). */
+export function montarSessao(c: Conteudo, aula: Aula, p: Progresso, s: Sorteio, total = 10, op: OpcoesConteudo = OPCOES_PADRAO): Sessao {
   const tamanho = Math.max(8, Math.min(12, total));
-  const proprias = gerarCandidatas(c, aula, s);
-
-  if (proprias.length === 0) {
-    // Aula sem conteúdo praticável: mensagem de incentivo + uma revisão curta (ou o tutorial).
-    const revisao = escolherRevisao(c, aula, p, 4, s, new Set());
-    const atividades: Atividade[] = revisao.length
-      ? revisao
-      : [{ tipo: 'tutorial', chave: `tutorial|${aula.aula}`, aula: aula.aula }];
-    return { aula, atividades, semConteudoProprio: true };
-  }
+  const proprias = atividadesDaAula(c, aula, s, op);
+  if (proprias.length === 0) return { aula, atividades: [] };
+  const obrigatorios = tiposObrigatorios(aula);
 
   const querRevisao = Math.round(tamanho * 0.3);
-  let daAula = escolherVariado(proprias, tamanho - querRevisao, p, s);
+  let daAula = escolherVariado(proprias, tamanho - querRevisao, p, s, true, obrigatorios);
   const evitar = new Set(daAula.map((a) => a.chave));
-  const revisao = escolherRevisao(c, aula, p, tamanho - daAula.length, s, evitar);
+  const revisao = escolherRevisao(c, aula, p, tamanho - daAula.length, s, evitar, op);
   // Se faltou revisão (começo do caderno), completa com mais atividades da própria aula.
   if (daAula.length + revisao.length < tamanho) {
     const resto = proprias.filter((a) => !evitar.has(a.chave));
@@ -164,5 +166,5 @@ export function montarSessao(c: Conteudo, aula: Aula, p: Progresso, s: Sorteio, 
   // Espalha a revisão no meio da sessão: depois da 2ª, 5ª, 8ª atividade...
   const atividades: Atividade[] = [...daAula];
   revisao.forEach((r, i) => atividades.splice(Math.min(atividades.length, 2 + i * 3 + i), 0, r));
-  return { aula, atividades, semConteudoProprio: false };
+  return { aula, atividades };
 }

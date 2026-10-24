@@ -8,7 +8,8 @@ import { el } from '../util/dom';
 import { icones } from '../ui/icones';
 import { irPara, mostrarTela, obterConteudo, topo } from '../app';
 import { lerLocal, gravarLocal } from '../dados/local';
-import { config, mudarConfig, type TamanhoTexto } from '../dados/config';
+import { config, mudarConfig, opcoesDoConteudo, type TamanhoTexto } from '../dados/config';
+import { aulasDisponiveis } from '../atividades/disponiveis';
 import { esquecerDemonstracoes, progresso, zerarProgresso } from '../dados/progresso';
 import { apagar, esvaziar, guardar, listarChaves, type Audio, type Fala } from '../dados/banco';
 import { audiosDaAula, audiosDoApp } from '../atividades/audios';
@@ -218,7 +219,7 @@ async function telaGravacoes(filtroAula: string, filtroTipo: string): Promise<vo
   const c = obterConteudo();
   const seletorAula = el('select', { id: 'filtro-aula' }) as HTMLSelectElement;
   seletorAula.append(el('option', { value: 'app' }, 'INSTRUÇÕES E FRASES DO APP'));
-  for (const a of c.aulas) seletorAula.append(el('option', { value: String(a.aula) }, `AULA ${a.aula} (${a.paginas})`));
+  for (const a of aulasDisponiveis(c, opcoesDoConteudo())) seletorAula.append(el('option', { value: String(a.aula) }, `AULA ${a.aula} (${a.paginas})`));
   seletorAula.value = filtroAula;
   const seletorTipo = el('select', { id: 'filtro-tipo' }) as HTMLSelectElement;
   for (const [v, t] of Object.entries(NOMES_CATEGORIA)) seletorTipo.append(el('option', { value: v }, t));
@@ -359,6 +360,8 @@ function telaConfiguracoes(): void {
   });
   const animacoes = el('input', { type: 'checkbox', checked: c.animacoes }) as HTMLInputElement;
   animacoes.addEventListener('change', () => mudarConfig({ animacoes: animacoes.checked }));
+  const numeros = el('input', { type: 'checkbox', checked: c.mostrarNumeros, 'data-chave-numeros': '' }) as HTMLInputElement;
+  numeros.addEventListener('change', () => mudarConfig({ mostrarNumeros: numeros.checked }));
   const quantidade = el('select', { id: 'quantidade' }) as HTMLSelectElement;
   for (let n = 8; n <= 12; n++) quantidade.append(el('option', { value: n }, `${n} ATIVIDADES`));
   quantidade.value = String(c.atividadesPorSessao);
@@ -387,6 +390,13 @@ function telaConfiguracoes(): void {
       el('label', { class: 'campo', for: 'voz' }, 'VOZ DO APARELHO', vozes),
       el('label', { class: 'campo', for: 'quantidade' }, 'ATIVIDADES POR SESSÃO', quantidade),
       el('fieldset', { class: 'escolha-grupo' }, el('legend', {}, 'ANIMAÇÕES'), el('label', {}, animacoes, 'MOSTRAR ANIMAÇÕES')),
+      el(
+        'fieldset',
+        { class: 'escolha-grupo' },
+        el('legend', {}, 'NÚMEROS E DINHEIRO'),
+        el('label', {}, numeros, 'MOSTRAR ATIVIDADES DE NÚMEROS E DINHEIRO'),
+        el('p', { class: 'fala' }, 'Desligada: as contas, o dinheiro e as horas somem das sessões, e as aulas que só têm números somem da lista.'),
+      ),
       demos,
     ),
   );

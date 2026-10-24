@@ -18,7 +18,8 @@ export async function resolverAtividade(page: Page): Promise<string> {
   switch (tipo) {
     case 'conheca':
     case 'leia':
-      break; // só ouvir: o botão SEGUIR aparece sozinho
+    case 'diga_letra':
+      break; // só ouvir/falar: o botão SEGUIR aparece sozinho
     case 'monte_silaba':
     case 'forme_palavra':
     case 'ordene':

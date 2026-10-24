@@ -15,34 +15,13 @@ import type {
   MonteSilaba,
   Ordene,
   QuantasSilabas,
-  Tutorial,
+  EscuteLetra,
+  DigaLetra,
 } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
 import { botaoOuvirDeNovo, classeDasColunas, criarEscolha, criarMontagem, criarOucaERepita, tocavel } from './comum';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
-
-// ---------- Tutorial (aulas sem conteúdo praticável, Parte 1) ----------
-
-export function montarTutorial(_a: Tutorial, ctx: Contexto): Controle {
-  const botao = el(
-    'button',
-    { type: 'button', class: 'botao principal', 'data-certo': 'sim', style: { minHeight: '140px', fontSize: '1.8rem' } },
-    icones.certo(40),
-    'TOQUE AQUI',
-  );
-  let feito = false;
-  botao.addEventListener('click', () => {
-    if (feito) return;
-    feito = true;
-    ctx.acertou();
-  });
-  ctx.area.append(
-    el('p', { class: 'etiqueta' }, 'ESTA AULA É FEITA NO CADERNO, COM O PROFESSOR. AQUI VOCÊ TREINA COMO USAR O APLICATIVO.'),
-    el('div', { style: { flex: '1', display: 'grid', placeItems: 'center' } }, botao),
-  );
-  return { passosDemo: () => [() => botao], travar: () => (feito = true) };
-}
 
 // ---------- 1. Conheça ----------
 
@@ -73,10 +52,28 @@ export function montarConheca(a: Conheca, ctx: Contexto): Controle {
   };
 }
 
+// ---------- Veja a letra e diga o nome dela ----------
+
+export function montarDigaLetra(a: DigaLetra, ctx: Contexto): Controle {
+  // O modelo é o NOME da letra ("pê"), como o estudante deve dizer.
+  const modelo = itemDe(a.alvo, 'tecla');
+  const letra = el('button', { type: 'button', class: 'tocavel leitura-gigante', 'aria-label': `Letra ${a.alvo}. Toque para ouvir o nome.` }, a.alvo);
+  letra.addEventListener('click', () => void ctx.falar(modelo));
+  ctx.area.append(el('div', { class: 'cartaz' }, letra));
+  const repita = criarOucaERepita(() => void ctx.falar(modelo), () => ctx.concluir());
+  if (repita) ctx.area.append(repita);
+  return {
+    // Não fala o nome sozinho: o estudante tenta primeiro. O nome toca no botão MODELO.
+    modelo: async () => undefined,
+    passosDemo: () => [() => ctx.area.querySelector<HTMLElement>('[data-ouvir-modelo]')],
+  };
+}
+
 // ---------- 2 e 7. Escute e toque a sílaba / letra / palavra certa ----------
 
-export function montarEscute(a: EscuteSilaba | EscutePalavra, ctx: Contexto): Controle {
-  const categoria: ItemAudio['categoria'] = a.categoria === 'letra' ? 'letra' : a.categoria === 'silaba' ? 'silaba' : 'palavra';
+export function montarEscute(a: EscuteSilaba | EscutePalavra | EscuteLetra, ctx: Contexto): Controle {
+  const categoria: ItemAudio['categoria'] =
+    a.tipo === 'escute_letra' ? 'letra' : a.tipo === 'escute_silaba' ? 'silaba' : a.categoria === 'letra' ? 'letra' : 'palavra';
   const item = itemDe(a.alvo, categoria);
   const { grade, escolha } = criarEscolha(
     ctx,

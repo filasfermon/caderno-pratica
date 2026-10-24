@@ -8,15 +8,16 @@ import { itensParaRevisar, registrarItem, INTERVALOS, type Progresso } from '../
 import { resolverPares } from '../src/conteudo/ligar';
 import { normalizarFrase } from '../src/util/texto';
 import { aula, conteudo } from './apoio';
+import { aulaDisponivel } from '../src/atividades/disponiveis';
 
 const vazio = (): Progresso => ({ sessoes: 1, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [] });
 const todas = (): Atividade[] => conteudo.aulas.flatMap((a) => gerarCandidatas(conteudo, a, criarSorteio(a.aula)));
 
 describe('geração das atividades', () => {
-  it('gera os 19 tipos de atividade ao longo do caderno', () => {
+  it('gera todos os tipos de atividade ao longo do caderno', () => {
     const tipos = new Set(todas().map((a) => a.tipo));
     const esperados: TipoAtividade[] = [
-      'conheca', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
+      'conheca', 'escute_letra', 'diga_letra', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
       'escute_palavra', 'escreva', 'complete_frase', 'ligue', 'leia', 'ordene', 'maiuscula',
       'conte', 'conta', 'pague', 'troco', 'da', 'hora',
     ];
@@ -110,8 +111,8 @@ describe('sessões', () => {
   it('toda aula com conteúdo tem sessão de 8 a 12 atividades', () => {
     for (const a of conteudo.aulas) {
       const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10);
-      if (s.semConteudoProprio) {
-        expect(s.atividades.length).toBeGreaterThanOrEqual(1);
+      if (s.atividades.length === 0) {
+        expect(aulaDisponivel(conteudo, a)).toBe(false);
         continue;
       }
       expect(s.atividades.length, `aula ${a.aula}`).toBeGreaterThanOrEqual(8);
@@ -126,13 +127,10 @@ describe('sessões', () => {
     for (const r of s.atividades.filter((a) => a.revisao)) expect(r.aula).toBeLessThan(23);
   });
 
-  it('aulas sem conteúdo praticável: mensagem + atividade simples (tutorial na Parte 1)', () => {
-    const s = montarSessao(conteudo, aula(3), vazio(), criarSorteio(1));
-    expect(s.semConteudoProprio).toBe(true);
-    expect(s.atividades.map((a) => a.tipo)).toEqual(['tutorial']);
+  it('aulas sem atividades de reconhecimento não têm sessão (e não aparecem)', () => {
     const s20 = montarSessao(conteudo, aula(20), vazio(), criarSorteio(1));
-    expect(s20.semConteudoProprio).toBe(true);
-    expect(s20.atividades.every((a) => a.revisao)).toBe(true);
+    expect(s20.atividades).toEqual([]);
+    expect(aulaDisponivel(conteudo, aula(20))).toBe(false);
   });
 
   it('repetição espaçada: o que foi errado volta mais cedo', () => {

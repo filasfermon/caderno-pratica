@@ -9,8 +9,10 @@ import { rotuloDoDinheiro } from './rotulos';
 
 export function textosVisiveis(a: Atividade): string[] {
   switch (a.tipo) {
-    case 'tutorial':
-      return [];
+    case 'escute_letra':
+      return a.opcoes;
+    case 'diga_letra':
+      return [a.alvo];
     case 'conheca':
       return [a.alvo, ...(a.silabas ? [a.silabas.join(' + ')] : [])];
     case 'escute_silaba':
