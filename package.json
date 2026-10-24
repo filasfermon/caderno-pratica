@@ -10,6 +10,7 @@
     "preview": "vite preview --port 4173",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:firebase": "npx -y firebase-tools@15 emulators:exec --only auth,firestore --project demo-caderno \"npx playwright test -c playwright.firebase.config.ts\"",
     "pronuncia": "tsx scripts/gerar-pronuncia.ts",
     "icones": "tsx scripts/gerar-icones.ts",
     "relatorio": "tsx scripts/relatorio-conteudo.ts"
@@ -26,6 +27,7 @@
     "workbox-window": "^7.4.1"
   },
   "dependencies": {
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "firebase": "^12.19.0"
   }
 }

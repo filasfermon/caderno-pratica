@@ -23,6 +23,8 @@ export interface Progresso {
   itens: Record<string, ItemLeitner>;
   /** Tipos de atividade que o estudante já viu (para mostrar a demonstração só na primeira vez). */
   tiposVistos: string[];
+  /** Quando o progresso mudou pela última vez (para juntar com a cópia da conta Google). */
+  atualizado?: number;
 }
 
 export const INTERVALOS = [0, 1, 2, 4, 8, 16];
@@ -37,7 +39,25 @@ export function progresso(): Progresso {
   return atual;
 }
 
+/** "apagado" = o professor apagou o progresso (a cópia da conta também deve ser apagada). */
+type Ouvinte = (p: Progresso, motivo: 'mudou' | 'apagado') => void;
+const ouvintes = new Set<Ouvinte>();
+
+/** Avisa quando o progresso muda (usado pela sincronização com a conta Google). */
+export function aoMudarProgresso(cb: Ouvinte): () => void {
+  ouvintes.add(cb);
+  return () => ouvintes.delete(cb);
+}
+
 function salvar(): void {
+  atual.atualizado = Date.now();
+  gravarLocal('progresso', atual);
+  ouvintes.forEach((cb) => cb(atual, 'mudou'));
+}
+
+/** Troca o progresso do aparelho (ex.: depois de juntar com a cópia da conta). */
+export function substituirProgresso(p: Progresso): void {
+  atual = { ...vazio(), ...p };
   gravarLocal('progresso', atual);
 }
 
@@ -94,4 +114,6 @@ export function esquecerDemonstracoes(): void {
 export function zerarProgresso(): void {
   atual = vazio();
   apagarLocal('progresso');
+  atual.atualizado = Date.now();
+  ouvintes.forEach((cb) => cb(atual, 'apagado'));
 }

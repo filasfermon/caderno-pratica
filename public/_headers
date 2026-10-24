@@ -1,0 +1,36 @@
+# Cabeçalhos para a Cloudflare Pages (o GitHub Pages ignora este arquivo).
+# Segurança + cache adequado para um PWA que funciona sem internet.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: microphone=(self), camera=(), geolocation=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self'; media-src 'self' blob: data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://apis.google.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+
+# O service worker, a página e o conteúdo precisam ser conferidos sempre (para chegar a versão nova).
+/sw.js
+  Cache-Control: no-cache
+/registerSW.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/conteudo_licoes.json
+  Cache-Control: no-cache
+
+# Arquivos com "impressão digital" no nome nunca mudam: podem ficar guardados por 1 ano.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/workbox-*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# As páginas de login do Firebase não devem ficar em cache.
+/__/*
+  Cache-Control: no-store

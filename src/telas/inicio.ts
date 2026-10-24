@@ -6,8 +6,37 @@ import { anunciar, botaoOuvir, mostrarTela, obterConteudo, textoPaginas } from '
 import { progresso } from '../dados/progresso';
 import { aulasDisponiveis } from '../atividades/disponiveis';
 import { opcoesDoConteudo } from '../dados/config';
+import { contaGoogleDisponivel, sairDaConta, usuarioDaConta } from '../conta/conta';
+import { botaoEntrarComGoogle } from './entrada';
 
 const FALA = 'Toque no botão laranja para praticar.';
+
+/** Conta Google (só aparece quando está configurada): quem entrou, ou o botão para entrar. */
+function blocoDaConta(): HTMLElement | null {
+  if (!contaGoogleDisponivel()) return null;
+  const u = usuarioDaConta();
+  if (u) {
+    const sair = el('button', { type: 'button', class: 'botao-icone contorno', 'data-sair-conta': '' }, 'SAIR DA CONTA');
+    sair.addEventListener('click', async () => {
+      await sairDaConta();
+      telaInicio();
+    });
+    return el(
+      'div',
+      { class: 'conta', 'data-conta': 'google' },
+      el('p', {}, icones.google(22), el('span', {}, 'PROGRESSO GUARDADO NA CONTA: ', el('strong', {}, u.nome.toLocaleUpperCase('pt-BR')))),
+      sair,
+    );
+  }
+  const aviso = el('p', { class: 'aviso', 'aria-live': 'polite', hidden: true });
+  return el(
+    'div',
+    { class: 'conta', 'data-conta': 'sem-conta' },
+    el('p', {}, 'SEM CONTA: O PROGRESSO FICA SÓ NESTE CELULAR.'),
+    botaoEntrarComGoogle(aviso, () => telaInicio()),
+    aviso,
+  );
+}
 
 export function telaInicio(): void {
   const c = obterConteudo();
@@ -40,6 +69,7 @@ export function telaInicio(): void {
         el('a', { class: 'botao', href: '#/escolher' }, icones.lista(30), 'ESCOLHER A AULA'),
         el('a', { class: 'botao', href: '#/progresso' }, icones.estrela(30), 'MEU PROGRESSO'),
       ),
+      blocoDaConta(),
     ),
   );
   anunciar(FALA);

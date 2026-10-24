@@ -1291,3 +1291,45 @@ details.parte summary {
   opacity: 0.45;
   cursor: default;
 }
+
+/* Entrada e conta Google */
+.entrada {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+}
+.entrada .marca {
+  justify-content: center;
+}
+.botao-google .fundo-g {
+  background: #fff;
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.conta {
+  border-top: 2px solid var(--borda);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.conta p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--texto-suave);
+}
+.conta .botao {
+  min-height: 64px;
+  font-size: 1.05rem;
+}

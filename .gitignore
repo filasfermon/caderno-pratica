@@ -1,7 +1,12 @@
 node_modules
 dist
+dist-firebase
 dev-dist
 test-results
 playwright-report
 *.log
 .lighthouse
+
+# Variáveis locais (nunca vão para o GitHub)
+.env
+.env.local
