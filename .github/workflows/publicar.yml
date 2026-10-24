@@ -26,7 +26,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Testes (regra de progressão, atividades, contas, pronúncia)
+      - name: Testes (regra de progressão, atividades, contas, pronúncia, áudios, privacidade)
         run: npm test
       - name: Caminho do site (https://USUARIO.github.io/NOME-DO-REPOSITORIO/)
         run: |
