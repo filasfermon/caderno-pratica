@@ -5,7 +5,6 @@ import { gerarCandidatas } from '../src/atividades/gerar';
 import { montarSessao } from '../src/atividades/sessao';
 import { textosVisiveis } from '../src/atividades/visiveis';
 import { criarSorteio } from '../src/util/aleatorio';
-import { registrarItem, type Progresso } from '../src/dados/progresso';
 import { aula, conteudo } from './apoio';
 
 const pode = (n: number, texto: string) => problemasDoTexto(texto, conhecimentoDaAula(aula(n))).length === 0;
@@ -66,15 +65,11 @@ describe('regra de progressão em TODAS as atividades geradas', () => {
   });
 
   it('toda sessão (aula + revisão) só mostra o que já foi ensinado na aula escolhida', () => {
-    // Progresso simulado: o estudante já praticou e errou itens de várias aulas.
-    const p: Progresso = { sessoes: 0, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [] };
     for (const a of conteudo.aulas) {
-      p.sessoes++;
-      const sessao = montarSessao(conteudo, a, p, criarSorteio(a.aula), 10);
+      const sessao = montarSessao(conteudo, a, criarSorteio(a.aula), 10, undefined, a.aula % 2 ? 'revisao' : 'aula');
       const k = conhecimentoDaAula(a);
       for (const at of sessao.atividades) {
         for (const t of textosVisiveis(at)) expect(problemasDoTexto(t, k), `aula ${a.aula} · ${at.tipo} · "${t}"`).toEqual([]);
-        registrarItem(p, at.chave, at.aula, at.chave.length % 3 !== 0);
       }
     }
   });

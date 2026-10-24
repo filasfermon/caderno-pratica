@@ -1,0 +1,36 @@
+# Cabeçalhos para a Cloudflare Pages (o GitHub Pages ignora este arquivo).
+# Segurança + cache adequado para um PWA que funciona sem internet.
+# O app é um site estático: não usa conta, cookies, microfone nem servidor.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Permissions-Policy: microphone=(), camera=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; media-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+
+# O service worker, a página e o conteúdo precisam ser conferidos sempre (para chegar a versão nova).
+/sw.js
+  Cache-Control: no-cache
+/registerSW.js
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/conteudo_licoes.json
+  Cache-Control: no-cache
+# Áudios prontos: o nome do arquivo não muda quando ele é trocado; por isso, sempre conferidos.
+/audio/*
+  Cache-Control: no-cache
+
+# Arquivos com "impressão digital" no nome nunca mudam: podem ficar guardados por 1 ano.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/workbox-*.js
+  Cache-Control: public, max-age=31536000, immutable

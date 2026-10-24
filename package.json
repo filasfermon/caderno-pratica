@@ -12,7 +12,9 @@
     "test:e2e": "playwright test",
     "pronuncia": "tsx scripts/gerar-pronuncia.ts",
     "icones": "tsx scripts/gerar-icones.ts",
-    "relatorio": "tsx scripts/relatorio-conteudo.ts"
+    "relatorio": "tsx scripts/relatorio-conteudo.ts",
+    "audios:lista": "tsx scripts/lista-de-audios.ts",
+    "audios:preparar": "tsx scripts/preparar-audios.ts"
   },
   "devDependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
@@ -24,8 +26,5 @@
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.5",
     "workbox-window": "^7.4.1"
-  },
-  "dependencies": {
-    "fflate": "^0.8.3"
   }
 }

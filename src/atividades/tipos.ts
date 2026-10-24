@@ -2,9 +2,10 @@
 // de uma tela; a tela é montada pelos arquivos de src/atividades/telas/.
 
 export type TipoAtividade =
-  | 'tutorial' // aulas sem conteúdo praticável: aprender a usar o app
   | 'conheca' // 1
-  | 'escute_silaba' // 2 (também para letras sozinhas)
+  | 'escute_letra' // escute e toque a letra certa
+  | 'ouca_fale' // ouça, fale você e ouça de novo (letra, sílaba ou palavra)
+  | 'escute_silaba' // 2
   | 'monte_silaba' // 3
   | 'complete_palavra' // 4
   | 'forme_palavra' // 5
@@ -32,12 +33,25 @@ interface Base {
   aula: number;
   /** true quando a atividade é de revisão de uma aula anterior. */
   revisao?: boolean;
+  /** true quando a atividade voltou no fim da prática porque o estudante errou. */
+  deNovo?: boolean;
 }
 
 export type TipoTexto = 'letra' | 'silaba' | 'palavra' | 'par';
 
-export interface Tutorial extends Base {
-  tipo: 'tutorial';
+export interface EscuteLetra extends Base {
+  tipo: 'escute_letra';
+  alvo: string;
+  /** 2 a 4 letras, com letras parecidas no som (A e E, P e B...). */
+  opcoes: string[];
+}
+
+/** Ouça e fale: o app fala o modelo, o estudante fala, o app fala o modelo de novo. Nada é gravado. */
+export interface OucaFale extends Base {
+  tipo: 'ouca_fale';
+  alvo: string;
+  /** Letra (dita pelo nome: "pê"), sílaba ou palavra. */
+  categoria: 'letra' | 'silaba' | 'palavra';
 }
 
 export interface Conheca extends Base {
@@ -51,7 +65,7 @@ export interface Conheca extends Base {
 export interface EscuteSilaba extends Base {
   tipo: 'escute_silaba';
   alvo: string;
-  categoria: 'letra' | 'silaba';
+  categoria: 'silaba';
   opcoes: string[];
 }
 
@@ -188,8 +202,9 @@ export interface Hora extends Base {
 }
 
 export type Atividade =
-  | Tutorial
   | Conheca
+  | EscuteLetra
+  | OucaFale
   | EscuteSilaba
   | MonteSilaba
   | CompletePalavra
@@ -209,7 +224,18 @@ export type Atividade =
   | Da
   | Hora;
 
-/** Atividades sem certo/errado (só ouvir, ler e gravar). */
+/** Atividades sem certo/errado (só ouvir, ler e falar). */
 export function ehSoDeOuvir(a: Atividade): boolean {
-  return a.tipo === 'conheca' || a.tipo === 'leia' || a.tipo === 'tutorial';
+  return a.tipo === 'conheca' || a.tipo === 'leia' || a.tipo === 'ouca_fale';
+}
+
+/** Atividades de números e dinheiro (podem ser desligadas em src/config/padroes.ts). */
+export const TIPOS_DE_NUMEROS: TipoAtividade[] = ['conte', 'conta', 'pague', 'troco', 'da', 'hora'];
+
+export function ehAtividadeDeNumeros(a: Atividade): boolean {
+  if (TIPOS_DE_NUMEROS.includes(a.tipo)) return true;
+  // "Conheça" e "Escute e toque" com números ou preços (aulas de números: 10, 20, R$ 2,50)
+  if ((a.tipo === 'conheca' || a.tipo === 'escute_palavra') && /\d/.test(a.alvo)) return true;
+  if (a.tipo === 'ligue' && [...a.esquerda, ...a.direita].some((t) => /\d/.test(t))) return true;
+  return false;
 }

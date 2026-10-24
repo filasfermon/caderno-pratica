@@ -5,7 +5,7 @@ import { el, limpar } from './util/dom';
 import { icones } from './ui/icones';
 import type { Conteudo } from './conteudo/tipos';
 import { falarEmSequencia, pararFala } from './audio/voz';
-import { pararGravacaoDoEstudante } from './atividades/telas/comum';
+import { botaoMaisDevagar } from './atividades/telas/comum';
 
 let conteudo: Conteudo | null = null;
 
@@ -34,11 +34,10 @@ export function irPara(rota: string): void {
   else location.hash = rota;
 }
 
-/** Troca o conteúdo da tela. Para a voz e o microfone da tela anterior. */
+/** Troca o conteúdo da tela. Para a voz da tela anterior. */
 export function mostrarTela(titulo: string, ...filhos: (Node | null)[]): number {
   numeroDaTela++;
   pararFala();
-  pararGravacaoDoEstudante();
   const app = raiz();
   limpar(app);
   for (const f of filhos) if (f) app.appendChild(f);
@@ -52,20 +51,17 @@ export function mostrarTela(titulo: string, ...filhos: (Node | null)[]): number 
   return numeroDaTela;
 }
 
-/** Botão grande de alto-falante: repete a instrução da tela. */
-export function botaoOuvir(texto: () => string | string[], rotulo = 'Ouvir de novo'): HTMLButtonElement {
+/** Alto-falante grande (repete a fala da tela) e, ao lado, a tartaruga (a mesma fala mais devagar). */
+export function botaoOuvir(texto: () => string | string[], rotulo = 'Ouvir de novo'): HTMLElement {
+  const tocar = (velocidade?: number) => {
+    const t = texto();
+    void falarEmSequencia((Array.isArray(t) ? t : [t]).map((x) => ({ categoria: 'instrucao' as const, texto: x })), { velocidade });
+  };
   return el(
-    'button',
-    {
-      type: 'button',
-      class: 'botao-ouvir',
-      'aria-label': rotulo,
-      onclick: () => {
-        const t = texto();
-        void falarEmSequencia((Array.isArray(t) ? t : [t]).map((x) => ({ categoria: 'instrucao' as const, texto: x })));
-      },
-    },
-    icones.altoFalante(34),
+    'div',
+    { class: 'ouvir' },
+    el('button', { type: 'button', class: 'botao-ouvir', 'aria-label': rotulo, onclick: () => tocar() }, icones.altoFalante(34)),
+    botaoMaisDevagar(tocar),
   );
 }
 
@@ -89,7 +85,7 @@ export function anunciar(texto: string | string[]): void {
   const frases = Array.isArray(texto) ? texto : [texto];
   setTimeout(() => {
     if (minha === numeroDaTela) void falarEmSequencia(frases.map((t) => ({ categoria: 'instrucao' as const, texto: t })));
-  }, 250);
+  }, 150);
 }
 
 /** "PÁGINA 51" ou "PÁGINAS 49–50". */

@@ -1,4 +1,4 @@
-# Roda todos os testes (Vitest e o teste de ponta a ponta com Playwright) em pull requests.
+# Roda todos os testes (Vitest e Playwright) em pull requests.
 name: Testes
 
 on:

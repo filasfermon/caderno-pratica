@@ -36,13 +36,6 @@
   color-scheme: light;
 }
 
-html[data-tamanho='grande'] {
-  --escala: 1.18;
-}
-html[data-tamanho='muito-grande'] {
-  --escala: 1.36;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -71,12 +64,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-html[data-animacoes='nao'] *,
-html[data-animacoes='nao'] *::before,
-html[data-animacoes='nao'] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+/* Quem pediu ao celular para reduzir o movimento não vê animações. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 #app {
@@ -225,6 +221,69 @@ button,
   gap: 16px;
 }
 
+/* Alto-falante + tartaruga (MAIS DEVAGAR) lado a lado */
+.ouvir {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.botao-devagar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--destaque-escuro);
+  background: var(--cartao);
+  color: var(--destaque-escuro);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 0;
+}
+.botao-devagar:active {
+  transform: translateY(2px);
+}
+.ouvir-de-novo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ouvir-de-novo > .botao {
+  flex: 1;
+}
+
+/* Ouça e fale: AGORA FALE VOCÊ (aviso calmo, sem números) */
+.fale-voce {
+  margin: 4px 0 0;
+  padding: 16px;
+  border-radius: var(--raio);
+  background: var(--verde-claro);
+  color: var(--verde);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.fale-voce .onda {
+  display: inline-flex;
+  animation: respirar 1.6s ease-in-out infinite;
+}
+@keyframes respirar {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
 /* ---------- Início ---------- */
 .inicio {
   flex: 1;
@@ -254,14 +313,34 @@ button,
   font-weight: 700;
   font-size: 1.5rem;
 }
-.marca h1 {
-  font-size: 1.35rem;
-}
 .marca p {
   margin: 0;
-  color: var(--texto-suave);
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   font-weight: 700;
+}
+.marca p small {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+/* Tela inicial: ESCOLHER A AULA em letras grandes */
+.titulo-inicio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.titulo-inicio h1 {
+  flex: 1 1 100%;
+  font-size: 2.1rem; /* cerca de 38 px */
+  line-height: 1.1;
+}
+.inicio .busca label {
+  font-size: 1.1rem;
+}
+.lista-escolha.grande .botao {
+  font-size: 1.25rem;
+  min-height: 80px;
 }
 
 /* ---------- Listas de escolha ---------- */
@@ -395,33 +474,87 @@ button,
   display: flex;
   flex-direction: column;
 }
-.bolinhas {
+.titulo-sessao {
   flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+/* Bolinhas de progresso: cada uma é um botão (área de toque de 44 × 44 px). */
+.bolinhas {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 2px;
   align-items: center;
   justify-content: center;
   list-style: none;
-  margin: 0;
+  margin: 0 0 6px;
   padding: 0;
 }
-.bolinhas li {
-  width: 14px;
-  height: 14px;
+.bolinha {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.bolinha .ponto {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2.5px solid var(--texto-suave);
-  background: transparent;
-}
-.bolinhas li.feita {
-  background: var(--destaque);
-  border-color: var(--destaque);
-}
-.bolinhas li.atual {
-  width: 20px;
-  height: 20px;
-  border: 4px solid var(--texto);
   background: var(--cartao);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+.bolinha.feita .ponto {
+  width: 28px;
+  height: 28px;
+  font-size: 1rem;
+  background: var(--destaque-escuro);
+  border-color: var(--destaque-escuro);
+}
+.bolinha.atual .ponto {
+  width: 34px;
+  height: 34px;
+  border: 4px solid var(--texto);
+  box-shadow: 0 0 0 3px var(--destaque);
+}
+.bolinha.atual.feita .ponto {
+  background: var(--destaque-escuro);
+}
+.rodape.navegacao {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.botao.navegar {
+  min-height: 64px;
+  font-size: 1.1rem;
+  padding: 10px 8px;
+  gap: 8px;
+}
+.refazer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.resposta-dada {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: var(--verde-claro);
+  border-radius: 12px;
+  padding: 10px 14px;
 }
 .instrucao {
   display: flex;
@@ -949,26 +1082,6 @@ button,
   font-size: 0.9rem;
 }
 
-/* Ouça e repita (gravação do estudante) */
-.ouca-repita {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-.ouca-repita .botao {
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  min-height: 84px;
-  padding: 8px 4px;
-  border-width: 2px;
-}
-.gravando {
-  background: #fff1f1 !important;
-  border-color: #b3261e !important;
-  color: #8c1d18 !important;
-}
-
 /* Fim da sessão */
 .fim {
   flex: 1;
@@ -986,186 +1099,7 @@ button,
   color: var(--destaque);
 }
 
-/* Progresso */
-details.parte {
-  background: var(--cartao);
-  border: 2px solid var(--borda);
-  border-radius: 16px;
-  padding: 4px 14px;
-  margin-bottom: 12px;
-}
-details.parte summary {
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  font-weight: 700;
-  font-size: 1.15rem;
-  cursor: pointer;
-}
-.unidade-progresso h2 {
-  font-size: 1rem;
-  margin: 10px 0 6px;
-  text-transform: uppercase;
-}
-.linhas-progresso {
-  list-style: none;
-  margin: 0 0 10px;
-  padding: 0;
-}
-.linhas-progresso li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--borda);
-  font-size: 1.05rem;
-}
-.linhas-progresso .sim {
-  color: var(--verde);
-  font-weight: 700;
-}
-.linhas-progresso .nao {
-  color: var(--texto-suave);
-}
-.resumo-progresso {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 14px;
-}
-
-/* Modo professor */
-.professor {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding-bottom: 32px;
-}
-.professor h2 {
-  font-size: 1.25rem;
-  margin-top: 8px;
-}
-.professor p {
-  margin: 0;
-}
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-weight: 700;
-}
-.campo select,
-.campo input[type='number'],
-.campo input[type='text'],
-.campo input[type='password'] {
-  font: inherit;
-  min-height: 56px;
-  border: 2px solid var(--texto);
-  border-radius: 12px;
-  padding: 6px 12px;
-  background: var(--cartao);
-  color: var(--texto);
-}
-.campo input[type='range'] {
-  min-height: 44px;
-  accent-color: var(--destaque);
-}
-.escolha-grupo {
-  border: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.escolha-grupo legend {
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.escolha-grupo label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 4px 12px;
-  border: 2px solid var(--borda);
-  border-radius: 12px;
-  background: var(--cartao);
-}
-.escolha-grupo input {
-  width: 26px;
-  height: 26px;
-  accent-color: var(--destaque);
-}
-.itens-gravacao {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.item-gravacao {
-  background: var(--cartao);
-  border: 2px solid var(--borda);
-  border-radius: 14px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.item-gravacao .cabeca {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: baseline;
-}
-.item-gravacao .texto {
-  font-size: 1.35rem;
-  font-weight: 700;
-  word-break: break-word;
-}
-.item-gravacao .origem {
-  font-size: 0.8rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 2px 8px;
-  border: 2px solid var(--texto-suave);
-  white-space: nowrap;
-}
-.item-gravacao .origem.professor {
-  border-color: var(--verde);
-  color: var(--verde);
-}
-.item-gravacao .acoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.item-gravacao .acoes .botao {
-  width: auto;
-  min-height: 56px;
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  border-width: 2px;
-}
-.item-gravacao .fala {
-  font-size: 0.9rem;
-  color: var(--texto-suave);
-}
-.pin {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: stretch;
-  max-width: 360px;
-  margin: 0 auto;
-  width: 100%;
-}
-.pin input {
-  font-size: 2.2rem;
-  letter-spacing: 0.5em;
-  text-align: center;
-}
+/* Aviso de nova versão, carregando e botões desligados */
 .nova-versao {
   position: fixed;
   left: 16px;

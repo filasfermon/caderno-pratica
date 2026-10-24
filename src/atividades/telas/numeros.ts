@@ -9,7 +9,7 @@ import type { Contexto, Controle, PassoDemo } from './contrato';
 import { botaoOuvirDeNovo, criarEscolha } from './comum';
 import { decompor, desenharDinheiro, desenharEmDezEUm, desenharQuantidade, desenharRelogio } from '../../ui/desenhos';
 import { combinacaoExata, formatarReais, resultadoComoTexto } from '../../conteudo/contas';
-import { animacoesLigadas } from '../../dados/config';
+import { animacoesLigadas } from '../../ui/movimento';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
 
@@ -75,8 +75,8 @@ export function montarConta(a: Conta, ctx: Contexto): Controle {
     const n = parseFloat(digitado.replace(',', '.'));
     if (Math.abs(n - a.resultado) < 0.001) {
       travado = true;
-      ctx.acertou();
-    } else ctx.errou();
+      ctx.acertou(digitado);
+    } else ctx.errou(digitado);
   };
   const { teclado, pronto, botoes } = criarTecladoNumerico(
     !Number.isInteger(a.resultado),
@@ -111,7 +111,7 @@ export function montarConta(a: Conta, ctx: Contexto): Controle {
     });
     ctx.area.append(ver, figura);
   }
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), teclado, pronto);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), teclado, pronto);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: () => {
@@ -171,10 +171,11 @@ export function montarPague(a: Pague, ctx: Contexto): Controle {
   const pronto = el('button', { type: 'button', class: 'botao principal', 'data-pronto': '' }, icones.certo(30), 'PRONTO');
   pronto.addEventListener('click', () => {
     if (travado || !naMao.length) return;
-    if (naMao.reduce((s, v) => s + v, 0) === a.preco) {
+    const total = naMao.reduce((s, v) => s + v, 0);
+    if (total === a.preco) {
       travado = true;
-      ctx.acertou();
-    } else ctx.errou();
+      ctx.acertou(formatarReais(total));
+    } else ctx.errou(formatarReais(total));
   });
   desenharMao();
   ctx.area.append(
@@ -274,7 +275,7 @@ export function montarDa(a: Da, ctx: Contexto): Controle {
     el('div', { class: 'etiqueta' }, 'NA MÃO:'),
     el('div', { class: 'dinheiro' }, ...decompor(a.naMao).map((v) => desenharDinheiro(v, 0.8))),
     el('p', { class: 'total' }, formatarReais(a.naMao)),
-    botaoOuvirDeNovo(() => void ctx.falar(item)),
+    botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })),
     grade,
   );
   return {

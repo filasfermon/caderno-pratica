@@ -85,6 +85,14 @@ function letrasNovas(aula: Aula): string[] {
 
 const OBJETOS: Objeto[] = ['lata', 'colher', 'feijao'];
 
+/** Letras que se confundem pelo som (para "Escute e toque a letra"). */
+const LETRAS_PARECIDAS: Record<string, string[]> = {
+  A: ['E', 'O'], E: ['A', 'I'], I: ['E', 'U'], O: ['U', 'A'], U: ['O', 'I'],
+  P: ['B', 'T'], B: ['P', 'D'], T: ['D', 'P'], D: ['T', 'B'], F: ['V', 'S'], V: ['F', 'B'],
+  M: ['N'], N: ['M'], C: ['G', 'S'], G: ['C', 'J'], S: ['Z', 'C'], Z: ['S'], J: ['G', 'X'],
+  X: ['J', 'S'], L: ['R'], R: ['L'], Q: ['C', 'G'], H: ['A'], K: ['C', 'Q'], W: ['V', 'U'], Y: ['I', 'J'],
+};
+
 // ---------- Geração ----------
 
 /**
@@ -130,6 +138,21 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
   const palavrasCurtas = ehAulaDePalavrinhas(aula)
     ? semRepetidos((aula.palavras ?? []).map((p) => F(p.trim())).filter((p) => ehPalavraSimples(p) && ok(p)))
     : palavras;
+  // Aulas das vogais (Unidades 3 e 4) e aulas "Aprenda" de cada consoante: sempre têm
+  // "Escute e toque a letra", "Escute e toque a sílaba" e "Ouça e fale".
+  const ehAulaDeNumeros = (aula.tipo ?? []).some((t) => maiusculas(t).includes('NÚMEROS'));
+  const ehAulaDasVogais = (aula.unidade === 3 || aula.unidade === 4) && !ehAulaDeNumeros;
+  const novas = letrasNovas(aula);
+  if (ehAulaDasVogais) for (const v of 'AEIOU') if (k.letras.has(v)) letras.push(v);
+  for (const l of novas) if (ok(l)) letras.push(l);
+  if (ehAulaDasVogais && silabasAula.length === 0) {
+    // Nas vogais, a vogal sozinha e os encontros de vogais (AI, EU) são as sílabas da aula.
+    const silabasDeVogais = [
+      ...palavrasDaAula(aula).filter((p) => /^[AEIOU]+$/.test(p) && silabar(p).length === 1),
+      ...'AEIOU'.split('').filter((v) => k.letras.has(v)),
+    ];
+    silabasAula.push(...semRepetidos(silabasDeVogais).filter(ok));
+  }
   const letrasU = semRepetidos(letras);
 
   // Bancos para distratores
@@ -156,17 +179,34 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
     const parecidos = bancoSilabas.filter((x) => familia(x) === familia(alvo) && x.length === alvo.length);
     const outros = [...silabasAula, ...bancoSilabas].filter((x) => Math.abs(x.length - alvo.length) <= 1);
     const distratores = escolherDistratores(alvo, parecidos, outros, 3, s).filter(ok);
-    if (distratores.length >= 2)
+    // Normalmente 3 ou 4 opções; no começo do caderno (só A e E conhecidos), 2.
+    const minimo = semRepetidos([...silabasAula, ...bancoSilabas]).length >= 3 ? 2 : 1;
+    if (distratores.length >= minimo)
       lista.push({ tipo: 'escute_silaba', chave: `escute_silaba|${alvo}`, aula: n, alvo, categoria: 'silaba', opcoes: embaralhar([alvo, ...distratores], s) });
   }
+
+  // ===== ESCUTE E TOQUE A LETRA  e  OUÇA E FALE (letra) =====
   for (const alvo of letrasU) {
     const minuscula = alvo !== maiusculas(alvo);
-    const conhecidas = [...(minuscula ? k.minusculas : k.letras)].filter((l) => /\p{L}/u.test(l));
-    const parecidas = conhecidas.filter((l) => ehVogal(l) === ehVogal(alvo));
-    const distratores = escolherDistratores(alvo, [...letrasU, ...parecidas], conhecidas, 3, s).filter(ok);
+    const conhecidas = [...(minuscula ? k.minusculas : k.letras)].filter((l) => /^\p{L}$/u.test(l) && ok(l));
+    // Primeiro as letras parecidas no som (A e E, P e B), depois as da mesma classe (vogal/consoante).
+    const parecidasNoSom = (LETRAS_PARECIDAS[maiusculas(alvo)] ?? []).map((l) => (minuscula ? l.toLowerCase() : l)).filter((l) => conhecidas.includes(l));
+    const mesmaClasse = conhecidas.filter((l) => ehVogal(l) === ehVogal(alvo));
+    const distratores = [
+      ...parecidasNoSom.slice(0, 2),
+      ...escolherDistratores(alvo, mesmaClasse.filter((l) => !parecidasNoSom.includes(l)), conhecidas.filter((l) => !parecidasNoSom.includes(l)), 3, s),
+    ]
+      .filter((l, i, arr) => l !== alvo && arr.indexOf(l) === i)
+      .slice(0, 3);
     if (distratores.length >= 1)
-      lista.push({ tipo: 'escute_silaba', chave: `escute_silaba|${alvo}`, aula: n, alvo, categoria: 'letra', opcoes: embaralhar([alvo, ...distratores], s) });
+      lista.push({ tipo: 'escute_letra', chave: `escute_letra|${alvo}`, aula: n, alvo, opcoes: embaralhar([alvo, ...distratores], s) });
+    lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|letra:${alvo}`, aula: n, alvo, categoria: 'letra' });
   }
+
+  // ===== OUÇA E FALE (sílabas e palavras da aula) =====
+  for (const alvo of silabasAula) lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|silaba:${alvo}`, aula: n, alvo, categoria: 'silaba' });
+  for (const alvo of palavrasCurtas.filter((p) => ehPalavraSimples(p)).slice(0, 4))
+    lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|palavra:${alvo}`, aula: n, alvo, categoria: 'palavra' });
 
   // ===== 3. MONTE A SÍLABA =====
   const consoantesConhecidas = [...k.letras].filter((l) => /^[A-Z]$/.test(l) && !ehVogal(l));
@@ -183,7 +223,6 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
   }
 
   // ===== 4. COMPLETE A PALAVRA COM A SÍLABA QUE FALTA =====
-  const novas = letrasNovas(aula);
   for (const palavra of palavras) {
     const sil = silabar(palavra);
     if (sil.length < 2 || sil.length > 4) continue;
@@ -402,7 +441,7 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
   return lista;
 }
 
-/** Usado pelos testes e pelo modo professor: o conhecimento da aula. */
+/** Usado pelos testes: o conhecimento da aula. */
 export function conhecimento(aula: Aula): Conhecimento {
   return conhecimentoDaAula(aula);
 }

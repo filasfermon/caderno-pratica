@@ -4,11 +4,11 @@
     "A tela mostra a sílaba como no caderno; a voz do aparelho recebe o texto desta tabela.",
     "silabas: \"PA\": \"pá\" quer dizer: a tela mostra PA e a voz lê pá.",
     "Quando a sílaba tem E ou O, há duas formas: \"aberta\" (pé, pó) e \"fechada\" (pê, pô).",
-    "O professor escolhe aberta ou fechada nas configurações do modo professor.",
+    "A forma usada (aberta ou fechada) é escolhida em src/config/padroes.ts (VOGAL_NAS_SILABAS).",
     "letras: \"nome\" é falado nas teclas; \"fala\" é falado quando a letra aparece sozinha (nome + exemplo).",
     "palavras: palavras e siglas que a voz lê mal (ex.: IFCE).",
     "Para corrigir: troque o texto entre aspas e salve. O comando \"npm run pronuncia\" só acrescenta o que falta; nunca apaga correções.",
-    "Também dá para corrigir dentro do app: modo professor → Gravações → Editar fala."
+    "Para uma sílaba ou letra soar melhor, também dá para pôr um áudio pronto em public/audio (veja o README)."
   ],
   "silabas": {
     "A": "á",

@@ -1,14 +1,11 @@
 // Transforma o texto da tela no texto que a voz do aparelho vai ler.
 //
 // Ordem de prioridade do texto falado:
-//   1. correção feita pelo professor neste aparelho (modo professor → Editar fala)
-//   2. correção que veio no pacote importado
-//   3. tabela src/dados/pronuncia.json (sílabas, letras, palavras especiais)
-//   4. regras automáticas (dinheiro, contas, horas, minúsculas)
+//   1. tabela src/dados/pronuncia.json (sílabas, letras, palavras especiais)
+//   2. regras automáticas (dinheiro, contas, horas, minúsculas)
 
 import tabela from '../dados/pronuncia.json';
-import { config } from '../dados/config';
-import { lerTodos, type Fala } from '../dados/banco';
+import { VOGAL_NAS_SILABAS } from '../config/padroes';
 import { falaAutomaticaDaSilaba } from './regras-pronuncia';
 import { maiusculas, normalizarFrase } from '../util/texto';
 
@@ -36,46 +33,17 @@ const SILABAS = tabela.silabas as Record<string, EntradaSilaba>;
 const LETRAS = tabela.letras as Record<string, { nome: string; fala: string }>;
 const PALAVRAS = tabela.palavras as Record<string, string>;
 
-/** Chave única de um item (a mesma para maiúsculas e minúsculas). */
-export function chaveDoItem(item: ItemAudio): string {
-  return `${item.categoria}:${maiusculas(normalizarFrase(item.texto))}`;
-}
-
-// Correções em memória (carregadas do banco ao abrir o app).
-const correcoesProfessor = new Map<string, string>();
-const correcoesPacote = new Map<string, string>();
-
-export async function carregarCorrecoes(): Promise<void> {
-  correcoesProfessor.clear();
-  correcoesPacote.clear();
-  for (const f of await lerTodos<Fala>('falas')) correcoesProfessor.set(f.chave, f.fala);
-  for (const f of await lerTodos<Fala>('falas_pacote')) correcoesPacote.set(f.chave, f.fala);
-}
-
-export function definirCorrecaoLocal(chave: string, fala: string | null): void {
-  if (fala === null) correcoesProfessor.delete(chave);
-  else correcoesProfessor.set(chave, fala);
-}
-
-export function correcaoDe(chave: string): string | undefined {
-  return correcoesProfessor.get(chave) ?? correcoesPacote.get(chave);
-}
-
 // ---------- Sílabas e letras ----------
 
-function escolherVariante(silaba: string, entrada: EntradaSilaba): string {
-  if (typeof entrada === 'string') return entrada;
-  // Sílaba com O (e sem E) segue a opção do O; as outras seguem a opção do E.
-  const c = config();
-  return entrada[/O/.test(silaba) && !/E/.test(silaba) ? c.vogalO : c.vogalE];
+function escolherVariante(entrada: EntradaSilaba): string {
+  return typeof entrada === 'string' ? entrada : entrada[VOGAL_NAS_SILABAS];
 }
 
 export function falaDaSilaba(silaba: string): string {
   const m = maiusculas(silaba.trim());
   const entrada = SILABAS[m];
-  if (entrada !== undefined) return escolherVariante(m, entrada);
-  const c = config();
-  return falaAutomaticaDaSilaba(m, /O/.test(m) && !/E/.test(m) ? c.vogalO : c.vogalE);
+  if (entrada !== undefined) return escolherVariante(entrada);
+  return falaAutomaticaDaSilaba(m, VOGAL_NAS_SILABAS);
 }
 
 export function nomeDaLetra(letra: string): string {
@@ -135,8 +103,6 @@ export function prepararTextoGeral(texto: string): string {
 
 /** Texto que a voz do aparelho deve ler para este item. */
 export function textoParaFala(item: ItemAudio): string {
-  const correcao = correcaoDe(chaveDoItem(item));
-  if (correcao) return correcao;
   const t = item.texto.trim();
   switch (item.categoria) {
     case 'letra':

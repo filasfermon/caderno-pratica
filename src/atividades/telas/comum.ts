@@ -3,19 +3,34 @@
 import { el } from '../../util/dom';
 import { icones } from '../../ui/icones';
 import type { ItemAudio } from '../../audio/pronuncia';
-import { falar, pararFala, tocarAudio } from '../../audio/voz';
-import { comecarGravacao, podeGravar, type GravadorAtivo } from '../../audio/gravador';
+import { falar } from '../../audio/voz';
 import type { Contexto } from './contrato';
-import { config } from '../../dados/config';
+import { VELOCIDADE_MAIS_DEVAGAR } from '../../config/padroes';
 
 /** Texto que, tocado, é lido em voz alta. */
 export function tocavel(texto: string, item: ItemAudio, classe = ''): HTMLButtonElement {
   return el('button', { type: 'button', class: `tocavel ${classe}`, onclick: () => falar(item), 'aria-label': `${texto}. Toque para ouvir.` }, texto);
 }
 
-/** Botão grande de alto-falante ("ouvir de novo"). */
-export function botaoOuvirDeNovo(acao: () => void, rotulo = 'OUVIR DE NOVO'): HTMLButtonElement {
-  return el('button', { type: 'button', class: 'botao', onclick: acao }, icones.altoFalante(30), rotulo);
+/**
+ * Botão da tartaruga (MAIS DEVAGAR): toca o mesmo áudio uma vez a 0,8.
+ * Não é uma configuração e não fica guardado.
+ */
+export function botaoMaisDevagar(acao: (velocidade: number) => void): HTMLButtonElement {
+  return el(
+    'button',
+    { type: 'button', class: 'botao-devagar', 'aria-label': 'Mais devagar', title: 'Mais devagar', 'data-mais-devagar': '', onclick: () => acao(VELOCIDADE_MAIS_DEVAGAR) },
+    icones.tartaruga(34),
+  );
+}
+
+/**
+ * Botão grande de alto-falante ("OUVIR DE NOVO") e, ao lado, a tartaruga (MAIS DEVAGAR).
+ * "acao" recebe a velocidade só quando é a tartaruga.
+ */
+export function botaoOuvirDeNovo(acao: (velocidade?: number) => void, rotulo = 'OUVIR DE NOVO'): HTMLElement {
+  const ouvir = el('button', { type: 'button', class: 'botao', 'data-ouvir-de-novo': '', onclick: () => acao() }, icones.altoFalante(30), rotulo);
+  return el('div', { class: 'ouvir-de-novo' }, ouvir, botaoMaisDevagar((v) => acao(v)));
 }
 
 export interface OpcaoEscolha {
@@ -35,11 +50,10 @@ export interface Escolha {
 
 /**
  * Opções com palavras compridas ficam numa coluna só, para as letras continuarem grandes
- * (no mínimo 40 px) mesmo no celular pequeno e no "texto muito grande".
+ * (no mínimo 40 px) mesmo no celular pequeno.
  */
 export function classeDasColunas(opcoes: string[]): string {
-  const limite = config().tamanhoTexto === 'normal' ? 5 : 3;
-  return opcoes.some((o) => o.length > limite) ? 'uma-coluna' : '';
+  return opcoes.some((o) => o.length > 5) ? 'uma-coluna' : '';
 }
 
 /**
@@ -61,14 +75,15 @@ export function criarEscolha(ctx: Contexto, opcoes: OpcaoEscolha[], classeGrade 
     );
     b.addEventListener('click', () => {
       if (travado) return;
+      const resposta = typeof o.conteudo === 'string' ? o.conteudo : o.rotulo;
       if (o.certa) {
         b.classList.add('certa');
         travar();
-        ctx.acertou();
+        ctx.acertou(resposta);
       } else {
         b.classList.add('tentou');
         b.disabled = true;
-        ctx.errou();
+        ctx.errou(resposta);
       }
     });
     botoes.push(b);
@@ -134,57 +149,4 @@ export function criarMontagem(vagas: number, classePeca = ''): {
       caixa.classList.add('certa');
     },
   };
-}
-
-let pararGravacaoAtual: (() => void) | null = null;
-
-/** Desliga o microfone se o estudante sair da tela no meio de uma gravação. */
-export function pararGravacaoDoEstudante(): void {
-  pararGravacaoAtual?.();
-  pararGravacaoAtual = null;
-}
-
-/**
- * "Ouça e repita": o estudante grava a própria leitura e ouve em seguida,
- * comparando com o modelo. Sem avaliação automática. A gravação não é guardada.
- */
-export function criarOucaERepita(modelo: () => void): HTMLElement | null {
-  if (!podeGravar()) return null;
-  let gravador: GravadorAtivo | null = null;
-  let minhaVoz: Blob | null = null;
-  const msg = el('p', { class: 'etiqueta', 'aria-live': 'polite' });
-  const gravar = el('button', { type: 'button', class: 'botao', 'aria-label': 'Gravar a minha voz' }, icones.microfone(30), 'GRAVAR');
-  const ouvirMinha = el('button', { type: 'button', class: 'botao', disabled: true, 'aria-label': 'Ouvir a minha voz' }, icones.tocar(30), 'MINHA VOZ');
-  const ouvirModelo = el('button', { type: 'button', class: 'botao', 'aria-label': 'Ouvir o modelo' }, icones.altoFalante(30), 'MODELO');
-  gravar.addEventListener('click', async () => {
-    if (gravador) {
-      const g = gravador;
-      gravador = null;
-      const r = await g.parar();
-      minhaVoz = r.blob;
-      gravar.classList.remove('gravando');
-      gravar.replaceChildren(icones.microfone(30), 'GRAVAR');
-      ouvirMinha.disabled = false;
-      msg.textContent = '';
-      void tocarAudio(minhaVoz);
-      return;
-    }
-    try {
-      pararFala();
-      gravador = await comecarGravacao();
-      gravar.classList.add('gravando');
-      gravar.replaceChildren(icones.parar(30), 'PARAR');
-      msg.textContent = 'GRAVANDO... LEIA EM VOZ ALTA.';
-    } catch {
-      msg.textContent = 'O MICROFONE NÃO ESTÁ LIBERADO NESTE APARELHO.';
-    }
-  });
-  ouvirMinha.addEventListener('click', () => minhaVoz && void tocarAudio(minhaVoz));
-  ouvirModelo.addEventListener('click', modelo);
-  const caixa = el('div', {}, el('div', { class: 'ouca-repita' }, gravar, ouvirMinha, ouvirModelo), msg);
-  pararGravacaoAtual = () => {
-    gravador?.cancelar();
-    gravador = null;
-  };
-  return caixa;
 }

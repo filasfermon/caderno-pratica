@@ -2,9 +2,19 @@
 
 import { el } from '../util/dom';
 import { icones } from '../ui/icones';
-import { anunciar, irPara, mostrarTela, obterConteudo, textoPaginas, topo } from '../app';
-import { progresso } from '../dados/progresso';
+import { anunciar, botaoOuvir, irPara, mostrarTela, obterConteudo, textoPaginas, topo } from '../app';
 import type { Aula } from '../conteudo/tipos';
+import { aulaDisponivel } from '../atividades/disponiveis';
+
+/** Só as aulas que têm atividades no app (sem as excluídas). Nenhuma aula é trancada. */
+function disponivel(a: Aula): boolean {
+  return aulaDisponivel(obterConteudo(), a);
+}
+
+/** Aulas disponíveis, conferindo só as que passam no filtro (as telas abrem mais rápido). */
+function disponiveis(filtro: (a: Aula) => boolean): Aula[] {
+  return obterConteudo().aulas.filter((a) => filtro(a) && disponivel(a));
+}
 
 function busca(): HTMLElement {
   const entrada = el('input', {
@@ -25,31 +35,40 @@ function busca(): HTMLElement {
   formulario.addEventListener('submit', (e) => {
     e.preventDefault();
     const n = parseInt(entrada.value.replace(/\D/g, ''), 10);
-    const existe = obterConteudo().aulas.some((a) => a.aula === n);
-    if (existe) irPara(`#/aula/${n}`);
+    const aula = obterConteudo().aulas.find((a) => a.aula === n);
+    const existe = !!aula;
+    if (aula && disponivel(aula)) irPara(`#/aula/${n}`);
     else {
       aviso.hidden = false;
-      aviso.textContent = 'ESSA AULA NÃO EXISTE. DIGITE O NÚMERO QUE ESTÁ NO CADERNO.';
+      aviso.textContent = existe
+        ? `A AULA ${n} É FEITA SÓ NO CADERNO. ESCOLHA OUTRA AULA.`
+        : 'ESSA AULA NÃO EXISTE. DIGITE O NÚMERO QUE ESTÁ NO CADERNO.';
     }
   });
   return el('div', {}, formulario, aviso);
 }
 
 function unidadesDaParte(parte: number): number[] {
-  return [...new Set(obterConteudo().aulas.filter((a) => a.parte === parte).map((a) => a.unidade))];
+  return [...new Set(disponiveis((a) => a.parte === parte).map((a) => a.unidade))];
 }
 
+/** Tela inicial: o app abre direto aqui (sem conta, sem cadastro, sem progresso). */
 export function telaPartes(): void {
   const c = obterConteudo();
   const fala = 'Escolha a parte do caderno. Ou digite o número da aula.';
   mostrarTela(
-    'Escolher a aula',
-    topo({ titulo: 'ESCOLHER A AULA', voltar: '#/', fala }),
-    busca(),
+    '',
+    el(
+      'div',
+      { class: 'inicio' },
+      el('div', { class: 'marca' }, el('div', { class: 'selo', 'aria-hidden': 'true' }, 'Aa'), el('p', {}, 'CADERNO PRÁTICA', el('small', {}, c.titulo.toLocaleUpperCase('pt-BR')))),
+      el('header', { class: 'titulo-inicio' }, el('h1', {}, 'ESCOLHER A AULA'), botaoOuvir(() => fala)),
+      busca(),
+    ),
     el(
       'ul',
-      { class: 'lista-escolha', 'aria-label': 'Partes do caderno' },
-      ...c.partes.map((p) =>
+      { class: 'lista-escolha grande', 'aria-label': 'Partes do caderno' },
+      ...c.partes.filter((p) => c.aulas.some((a) => a.parte === p.parte && disponivel(a))).map((p) =>
         el(
           'li',
           {},
@@ -73,7 +92,7 @@ export function telaUnidades(parte: number): void {
   const fala = 'Escolha a unidade.';
   mostrarTela(
     `Parte ${parte}`,
-    topo({ titulo: `PARTE ${parte}${p ? ' · ' + p.nome : ''}`, voltar: '#/escolher', fala }),
+    topo({ titulo: `PARTE ${parte}${p ? ' · ' + p.nome : ''}`, voltar: '#/', fala }),
     el(
       'ul',
       { class: 'lista-escolha', 'aria-label': 'Unidades' },
@@ -97,7 +116,6 @@ export function telaUnidades(parte: number): void {
 }
 
 function cartaoAula(a: Aula): HTMLElement {
-  const vezes = progresso().aulas[a.aula]?.vezes ?? 0;
   return el(
     'li',
     {},
@@ -106,14 +124,13 @@ function cartaoAula(a: Aula): HTMLElement {
       { class: 'cartao-aula', href: `#/aula/${a.aula}`, style: { textDecoration: 'none', color: 'inherit' } },
       el('span', { class: 'rotulo' }, `AULA ${a.aula}`),
       el('span', { class: 'paginas' }, textoPaginas(a.paginas)),
-      vezes ? el('span', { class: 'feito' }, icones.certo(18), 'PRATICADA') : null,
     ),
   );
 }
 
 export function telaAulasDaUnidade(unidade: number): void {
   const c = obterConteudo();
-  const aulas = c.aulas.filter((a) => a.unidade === unidade);
+  const aulas = disponiveis((a) => a.unidade === unidade);
   const nome = c.unidades.find((x) => x.unidade === unidade)?.nome ?? '';
   const parte = aulas[0]?.parte ?? 1;
   const fala = 'Escolha a aula. O número da aula está no caderno.';

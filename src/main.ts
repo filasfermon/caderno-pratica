@@ -1,35 +1,32 @@
-// Início do app: carrega o conteúdo, aplica as configurações e liga as telas.
+// Início do app: carrega o conteúdo e liga as telas.
+// O app não tem conta nem cadastro e não guarda nenhum dado no aparelho.
 
 import './estilo.css';
 import { el } from './util/dom';
-import { definirConteudo, mostrarTela, raiz } from './app';
+import { definirConteudo, mostrarTela, obterConteudo, raiz } from './app';
 import type { Conteudo } from './conteudo/tipos';
-import { aplicarConfigNaTela } from './dados/config';
-import { carregarCorrecoes } from './audio/pronuncia';
-import { telaInicio } from './telas/inicio';
 import { telaAulasDaUnidade, telaPartes, telaUnidades } from './telas/escolher';
 import { telaAula } from './telas/aula';
-import { telaProgresso } from './telas/progresso';
-import { telaProfessor, pararGravacaoDoProfessor } from './telas/professor';
 import { registrarServiceWorker } from './pwa';
+import { prepararAulasDisponiveis } from './atividades/disponiveis';
+import { apagarDadosDeVersoesAntigas } from './dados/apagar-antigos';
+import { carregarAudiosProntos } from './audio/arquivos';
 
 function rotear(): void {
-  pararGravacaoDoProfessor();
   const caminho = location.hash.replace(/^#\/?/, '').split('?')[0];
-  const partes = caminho.split('/').filter(Boolean);
-  const [secao, a, b] = partes;
+  const [secao, a, b] = caminho.split('/').filter(Boolean);
   if (secao === 'escolher' && a === 'parte') return telaUnidades(Number(b));
   if (secao === 'escolher' && a === 'unidade') return telaAulasDaUnidade(Number(b));
-  if (secao === 'escolher') return telaPartes();
   if (secao === 'aula') return telaAula(Number(a));
-  if (secao === 'progresso') return telaProgresso();
-  if (secao === 'professor') return telaProfessor(partes.slice(1));
-  return telaInicio();
+  // Tela inicial = ESCOLHER A AULA (endereços antigos, como #/progresso e #/professor, também vêm para cá).
+  return telaPartes();
 }
 
 async function iniciar(): Promise<void> {
-  aplicarConfigNaTela();
+  apagarDadosDeVersoesAntigas();
   raiz().replaceChildren(el('p', { class: 'carregando' }, 'CARREGANDO...'));
+  // A lista dos áudios prontos de letras e sílabas (sem ela, a voz do celular fala tudo).
+  const audios = carregarAudiosProntos(import.meta.env.BASE_URL);
   try {
     // O conteúdo vem sempre do arquivo conteudo_licoes.json (nada fixo no código).
     const resposta = await fetch(`${import.meta.env.BASE_URL}conteudo_licoes.json`);
@@ -42,9 +39,10 @@ async function iniciar(): Promise<void> {
     );
     return;
   }
-  await carregarCorrecoes().catch(() => undefined);
+  await audios;
   window.addEventListener('hashchange', rotear);
   rotear();
+  prepararAulasDisponiveis(obterConteudo());
 }
 
 registrarServiceWorker();

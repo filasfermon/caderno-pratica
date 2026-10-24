@@ -1,21 +1,24 @@
-// A VOZ DO APP — três camadas, nesta ordem:
-//   (a) gravação do professor feita neste aparelho;
-//   (b) áudio do pacote .zip importado;
-//   (c) voz sintetizada do navegador (Web Speech API), em português do Brasil.
+// A VOZ DO APP, nesta ordem:
+//   1. letras e sílabas: o áudio pronto de public/audio (veja audio/arquivos.ts), se existir;
+//   2. todo o resto (e letras e sílabas sem arquivo): a voz do celular (Web Speech API),
+//      em português do Brasil.
+// Nada é gravado e nada é guardado no aparelho.
 //
 // Também faz o "karaokê": avisa qual palavra está sendo lida.
 
-import { config } from '../dados/config';
-import { ler, type Audio } from '../dados/banco';
-import { chaveDoItem, textoParaFala, type ItemAudio } from './pronuncia';
-
-export type OrigemAudio = 'professor' | 'pacote' | 'voz';
+import { VELOCIDADE_DA_VOZ } from '../config/padroes';
+import { textoParaFala, type ItemAudio } from './pronuncia';
+import { arquivoDoItem, temAudioPronto } from './arquivos';
 
 export interface OpcoesFala {
   /** Chamado com o número da palavra que está sendo lida (0, 1, 2...). */
   aoLerPalavra?: (indice: number) => void;
-  /** Ignora gravações e usa só a voz do aparelho (modo professor: "ouvir a voz do aparelho"). */
-  soVozDoAparelho?: boolean;
+  /**
+   * Velocidade só desta fala (o botão MAIS DEVAGAR usa 0,8). Vale para a voz do celular
+   * e para o áudio pronto. Sem isto: voz do celular em VELOCIDADE_DA_VOZ e áudio pronto
+   * na velocidade em que foi gravado.
+   */
+  velocidade?: number;
 }
 
 // ---------- Escolha da melhor voz pt-BR ----------
@@ -51,15 +54,13 @@ function pontuar(v: SpeechSynthesisVoice): number {
   return p;
 }
 
-export function vozesPortugues(): SpeechSynthesisVoice[] {
+function vozesPortugues(): SpeechSynthesisVoice[] {
   carregarVozes();
   return vozes.filter((v) => pontuar(v) >= 0).sort((a, b) => pontuar(b) - pontuar(a));
 }
 
 function vozEscolhida(): SpeechSynthesisVoice | undefined {
-  const lista = vozesPortugues();
-  const nome = config().voz;
-  return lista.find((v) => v.name === nome) ?? lista[0];
+  return vozesPortugues()[0];
 }
 
 // ---------- Tocar ----------
@@ -75,8 +76,11 @@ export function geracaoAtual(): number {
 
 /** Para qualquer fala ou áudio que esteja tocando. */
 let ultimoCancelamento = 0;
+/** Muda a cada pararFala(): um áudio que ainda estava sendo lido não toca mais. */
+let cortes = 0;
 
 export function pararFala(): void {
+  cortes++;
   const a = atual;
   atual = null;
   a?.parar();
@@ -85,19 +89,6 @@ export function pararFala(): void {
     s.cancel();
     ultimoCancelamento = Date.now();
   }
-}
-
-/** Procura a gravação de um item: primeiro a do professor, depois a do pacote. */
-export async function gravacaoDe(chave: string): Promise<{ audio: Audio; origem: OrigemAudio } | null> {
-  const doProfessor = await ler<Audio>('gravacoes', chave);
-  if (doProfessor) return { audio: doProfessor, origem: 'professor' };
-  const doPacote = await ler<Audio>('pacote', chave);
-  if (doPacote) return { audio: doPacote, origem: 'pacote' };
-  return null;
-}
-
-export async function origemDoAudio(item: ItemAudio): Promise<OrigemAudio> {
-  return (await gravacaoDe(chaveDoItem(item)))?.origem ?? 'voz';
 }
 
 function palavrasDe(texto: string): string[] {
@@ -142,31 +133,9 @@ function novaFala(resolve: () => void, aoParar: () => void = () => undefined) {
   return controle;
 }
 
-function tocarBlob(blob: Blob, texto: string, opcoes: OpcoesFala): Promise<void> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    const fala = novaFala(
-      () => {
-        URL.revokeObjectURL(url);
-        resolve();
-      },
-      () => audio.pause(),
-    );
-    audio.onended = fala.terminar;
-    audio.onerror = fala.terminar;
-    audio.onloadedmetadata = () => {
-      if (opcoes.aoLerPalavra && isFinite(audio.duration)) karaokePorTempo(texto, audio.duration * 1000, opcoes.aoLerPalavra, fala.timers);
-    };
-    // Segurança: se o áudio não avisar o fim, seguimos depois de um tempo.
-    fala.timers.push(window.setTimeout(fala.terminar, 30_000));
-    audio.play().catch(fala.terminar);
-  });
-}
-
 /** Tempo estimado de leitura (para quando a voz do aparelho não avisa o fim). */
-function duracaoEstimada(texto: string): number {
-  return (texto.length * 85) / Math.max(0.5, config().velocidade) + 400;
+function duracaoEstimada(texto: string, velocidade = VELOCIDADE_DA_VOZ): number {
+  return (texto.length * 85) / Math.max(0.5, velocidade) + 400;
 }
 
 function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFala): Promise<void> {
@@ -183,7 +152,7 @@ function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFa
     const enunciado = new SpeechSynthesisUtterance(textoFala);
     enunciado.lang = 'pt-BR';
     enunciado.voice = voz;
-    enunciado.rate = config().velocidade;
+    enunciado.rate = opcoes.velocidade ?? VELOCIDADE_DA_VOZ;
     let recebeuLimite = false;
     if (opcoes.aoLerPalavra) {
       // Quando a fala tem as mesmas palavras da tela, usamos os avisos de palavra da própria voz.
@@ -203,18 +172,97 @@ function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFa
       // Se a voz não mandar avisos de palavra em 600 ms, o karaokê segue pelo relógio.
       fala.timers.push(
         window.setTimeout(() => {
-          if (!recebeuLimite) karaokePorTempo(textoTela, duracaoEstimada(textoFala) - 600, opcoes.aoLerPalavra!, fala.timers);
+          if (!recebeuLimite) karaokePorTempo(textoTela, duracaoEstimada(textoFala, opcoes.velocidade) - 600, opcoes.aoLerPalavra!, fala.timers);
         }, 600),
       );
     }
     enunciado.onend = fala.terminar;
     enunciado.onerror = fala.terminar;
     // Segurança: algumas vozes não avisam o fim. Depois do tempo estimado (com folga), seguimos.
-    fala.timers.push(window.setTimeout(fala.terminar, duracaoEstimada(textoFala) * 2 + 3000));
+    fala.timers.push(window.setTimeout(fala.terminar, duracaoEstimada(textoFala, opcoes.velocidade) * 2 + 3000));
     // Alguns Android perdem a fala se ela começa logo depois de um cancelamento: esperamos um pouquinho.
     const espera = Math.max(0, 80 - (Date.now() - ultimoCancelamento));
     if (espera) fala.timers.push(window.setTimeout(() => s.speak(enunciado), espera));
     else s.speak(enunciado);
+  });
+}
+
+// ---------- Áudios prontos (public/audio) ----------
+
+// Um só tocador de áudio para o app inteiro. No iPhone (Safari), um áudio só toca
+// depois de um toque na tela; por isso o tocador é "destravado" no primeiro toque.
+const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let tocador: HTMLAudioElement | null = null;
+
+function obterTocador(): HTMLAudioElement {
+  if (!tocador) {
+    tocador = new Audio();
+    tocador.preload = 'auto';
+  }
+  return tocador;
+}
+
+if (typeof document !== 'undefined' && typeof Audio !== 'undefined') {
+  document.addEventListener(
+    'pointerdown',
+    () => {
+      const t = obterTocador();
+      if (t.src) return;
+      t.src = SILENCIO;
+      t.play().catch(() => undefined);
+    },
+    { once: true, capture: true },
+  );
+}
+
+// Cada arquivo é lido inteiro (do cache do app, sem internet) e tocado da memória.
+// Assim o iPhone toca o áudio mesmo sem internet (ele não aceita tocar "aos pedaços"
+// direto do cache). Nada disso é guardado: some quando o app fecha.
+const naMemoria = new Map<string, Promise<string | null>>();
+
+function lerArquivo(url: string): Promise<string | null> {
+  if (!naMemoria.has(url)) {
+    const lido = fetch(url)
+      .then((r) => (r.ok ? r.blob() : null))
+      .then((b) => (b && b.size > 0 ? URL.createObjectURL(b) : null))
+      .catch(() => null);
+    naMemoria.set(url, lido);
+    void lido.then((u) => u === null && naMemoria.delete(url)); // falhou: tenta de novo da próxima vez
+  }
+  return naMemoria.get(url)!;
+}
+
+/** Toca um áudio pronto. Devolve false se ele não pôde tocar (aí a voz do celular fala). */
+async function tocarArquivo(endereco: string, opcoes: OpcoesFala): Promise<boolean> {
+  const meuCorte = cortes;
+  const url = await lerArquivo(endereco);
+  if (meuCorte !== cortes) return true; // a fala foi parada (ou outra começou) enquanto o arquivo era lido
+  if (!url) return false;
+  return new Promise((resolve) => {
+    const audio = obterTocador();
+    audio.pause();
+    let tocou = false;
+    const fala = novaFala(
+      () => {
+        audio.onended = audio.onerror = null;
+        resolve(tocou);
+      },
+      () => audio.pause(),
+    );
+    audio.onended = fala.terminar;
+    audio.onerror = fala.terminar;
+    audio.src = url;
+    audio.playbackRate = opcoes.velocidade ?? 1; // sem velocidade pedida: a do arquivo
+    // Segurança: se o áudio não avisar o fim, seguimos depois de um tempo.
+    fala.timers.push(window.setTimeout(fala.terminar, 15_000));
+    audio.play().then(
+      () => {
+        tocou = true;
+        audio.playbackRate = opcoes.velocidade ?? 1;
+        opcoes.aoLerPalavra?.(0);
+      },
+      () => fala.terminar(),
+    );
   });
 }
 
@@ -225,28 +273,21 @@ function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFa
 export async function falar(item: ItemAudio, opcoes: OpcoesFala = {}): Promise<void> {
   const minha = ++geracao;
   pararFala();
-  if (!opcoes.soVozDoAparelho) {
-    const gravacao = await gravacaoDe(chaveDoItem(item));
-    if (minha !== geracao) return; // outra fala começou enquanto procurávamos a gravação
-    if (gravacao) return tocarBlob(gravacao.audio.blob, item.texto, opcoes);
+  const arquivo = arquivoDoItem(item);
+  if (arquivo && temAudioPronto(arquivo)) {
+    const tocou = await tocarArquivo(`${import.meta.env.BASE_URL}audio/${arquivo}`, opcoes);
+    // Tocou (ou outra fala começou no meio): pronto. Se o arquivo falhou, a voz do celular fala.
+    if (tocou || minha !== geracao) return;
   }
-  if (minha !== geracao) return;
   return falarSintetizado(item.texto, textoParaFala(item), opcoes);
 }
 
 /** Fala vários itens em sequência. Para no meio se outra fala começar. */
-export async function falarEmSequencia(itens: ItemAudio[]): Promise<boolean> {
+export async function falarEmSequencia(itens: ItemAudio[], opcoes: Pick<OpcoesFala, 'velocidade'> = {}): Promise<boolean> {
   for (const item of itens) {
     const antes = geracao;
-    await falar(item);
+    await falar(item, opcoes);
     if (geracao !== antes + 1) return false; // outra fala começou no meio: paramos aqui
   }
   return true;
-}
-
-/** Toca um áudio qualquer (ex.: a gravação do próprio estudante). */
-export function tocarAudio(blob: Blob): Promise<void> {
-  geracao++;
-  pararFala();
-  return tocarBlob(blob, '', {});
 }

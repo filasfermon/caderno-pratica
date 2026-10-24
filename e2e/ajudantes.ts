@@ -1,8 +1,17 @@
 // Ajudantes do teste de ponta a ponta: fazem uma sessão inteira, atividade por atividade.
 // Cada tela de atividade guarda a resposta esperada em data-resposta (só para os testes).
-import { expect, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
-async function esperarFimDaDemonstracao(page: Page): Promise<void> {
+/**
+ * A demonstração aparece na primeira vez de cada tipo de atividade, desde que o app abriu
+ * (nada fica guardado). Os testes tocam PULAR, como faria quem já sabe fazer.
+ */
+export async function pularDemonstracao(page: Page): Promise<void> {
+  // Dá tempo de a demonstração começar (ela começa logo que a atividade abre).
+  await page.waitForTimeout(150);
+  if (await page.locator('[data-sessao][data-demo]').count()) {
+    await page.locator('[data-pular-demo]').click().catch(() => undefined);
+  }
   await page.waitForFunction(() => !document.querySelector('[data-sessao][data-demo]'), null, { timeout: 90_000 });
 }
 
@@ -12,13 +21,15 @@ async function clicarSePuder(page: Page, seletor: string): Promise<void> {
 
 /** Resolve a atividade que está na tela. Devolve o tipo resolvido. */
 export async function resolverAtividade(page: Page): Promise<string> {
-  await esperarFimDaDemonstracao(page);
+  await pularDemonstracao(page);
   const tipo = (await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '';
+  const indice = (await page.getAttribute('[data-sessao]', 'data-indice')) ?? '';
   const resposta = JSON.parse((await page.getAttribute('.area', 'data-resposta')) ?? 'null');
   switch (tipo) {
     case 'conheca':
     case 'leia':
-      break; // só ouvir: o botão SEGUIR aparece sozinho
+    case 'ouca_fale':
+      break; // só ouvir, ler e falar: nada a tocar na área
     case 'monte_silaba':
     case 'forme_palavra':
     case 'ordene':
@@ -45,12 +56,23 @@ export async function resolverAtividade(page: Page): Promise<string> {
       }
       break;
     default:
-      // Escolhas: escute, complete, quantas, conte, troco, dá?, hora, tutorial
+      // Escolhas: escute, complete, quantas, conte, troco, dá?, hora
       await clicarSePuder(page, '.area [data-certo="sim"]');
   }
-  const seguir = page.locator('[data-seguir]');
-  await expect(seguir).toBeVisible({ timeout: 30_000 });
-  await seguir.click();
+  if (tipo === 'ouca_fale') {
+    // Ouça, fale você, ouça de novo: depois aparece SEGUIR.
+    await page.locator('.area [data-seguir]').click({ timeout: 30_000 });
+  } else if (['conheca', 'leia'].includes(tipo)) {
+    // Só ouvir e ler: contam como feitas depois de ouvidas; o estudante toca AVANÇAR.
+    await page.waitForSelector('[data-sessao][data-feita="sim"]', { timeout: 30_000 });
+    await page.locator('[data-avancar]').click();
+  }
+  // Depois do acerto (ou da resposta mostrada), o próximo item começa sozinho.
+  await page.waitForFunction(
+    (antes) => !!document.querySelector('[data-fim]') || document.querySelector<HTMLElement>('[data-sessao]')?.dataset.indice !== antes,
+    indice,
+    { timeout: 30_000 },
+  );
   return tipo;
 }
 
@@ -62,6 +84,6 @@ export async function fazerSessao(page: Page): Promise<string[]> {
     if (await page.locator('[data-fim]').count()) return feitos;
     feitos.push(await resolverAtividade(page));
   }
-  await expect(page.locator('[data-fim]')).toBeVisible();
+  await page.waitForSelector('[data-fim]');
   return feitos;
 }

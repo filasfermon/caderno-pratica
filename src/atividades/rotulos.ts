@@ -3,82 +3,87 @@
 
 import type { Atividade } from './tipos';
 
-/** Instrução de cada atividade. A mesma frase é escrita e falada. */
+/**
+ * Instrução de cada atividade: uma frase curta e direta, sempre a mesma para o mesmo tipo.
+ * A mesma frase é escrita e falada. Usa os verbos do caderno (ESCUTE, TOQUE, FORME, LIGUE...).
+ */
 export function instrucaoDe(a: Atividade): string {
   switch (a.tipo) {
-    case 'tutorial':
-      return 'Toque no botão laranja.';
     case 'conheca':
       return a.categoria === 'letra' || a.categoria === 'par'
-        ? 'Escute e leia a letra. Toque nela para ouvir de novo.'
+        ? 'Escute e leia a letra.'
         : a.categoria === 'silaba'
-          ? 'Escute e leia a sílaba. Toque nela para ouvir de novo.'
-          : 'Escute e leia. Toque para ouvir de novo.';
+          ? 'Escute e leia a sílaba.'
+          : 'Escute e leia.';
+    case 'escute_letra':
+      return 'Escute e toque a letra.';
+    case 'ouca_fale':
+      return 'Ouça e fale.';
     case 'escute_silaba':
-      return a.categoria === 'letra' ? 'Escute e toque a letra certa.' : 'Escute e toque a sílaba certa.';
+      return 'Qual é a sílaba?';
     case 'monte_silaba':
-      return 'Escute e forme a sílaba. Toque nas letras na ordem certa.';
+      return 'Forme a sílaba.';
     case 'complete_palavra':
-      return 'Escute a palavra. Toque na sílaba que falta.';
+      return 'Complete a palavra.';
     case 'forme_palavra':
-      return 'Toque nas sílabas na ordem certa para formar a palavra.';
+      return 'Forme a palavra.';
     case 'quantas_silabas':
-      return 'Escute a palavra. Quantas sílabas ela tem? Toque no número.';
+      return 'Quantas sílabas?';
     case 'escute_palavra':
-      return /\d/.test(a.alvo) ? 'Escute e toque o número certo.' : 'Escute e toque a palavra certa.';
+      return /\d/.test(a.alvo) ? 'Qual é o número?' : 'Qual é a palavra?';
     case 'escreva':
-      return 'Escute e escreva a palavra. Toque nas teclas.';
+      return 'Escreva a palavra.';
     case 'complete_frase':
-      return 'Leia e complete a frase. Toque na resposta certa.';
+      return 'Complete a frase.';
     case 'ligue':
-      return 'Ligue os pares. Toque num item da esquerda e depois no par da direita.';
+      return 'Ligue os pares.';
     case 'maiuscula':
-      return 'Ligue a letra maiúscula com a letra minúscula.';
+      return 'Ligue a maiúscula com a minúscula.';
     case 'leia':
-      return 'Escute e leia junto. Depois, leia sozinho.';
+      return 'Escute e leia junto.';
     case 'ordene':
-      return 'Toque nas palavras na ordem certa para formar a frase.';
+      return 'Forme a frase.';
     case 'conte':
-      return 'Conte e toque o número certo.';
+      return 'Conte e toque o número.';
     case 'conta':
-      return 'Faça a conta. Toque nos números da resposta.';
+      return 'Faça a conta.';
     case 'pague':
-      return 'Toque nas notas e moedas para pagar o preço.';
+      return 'Pague o preço.';
     case 'troco':
-      return 'Veja o troco. Depois, toque no valor do troco.';
+      return 'Quanto é o troco?';
     case 'da':
-      return 'O dinheiro dá para comprar? Toque na resposta.';
+      return 'O dinheiro dá?';
     case 'hora':
-      return 'Leia a hora no relógio. Toque na hora certa.';
+      return 'Que horas são?';
   }
 }
 
-/** Todas as instruções possíveis (o professor pode gravar cada uma). */
+/** Todas as instruções possíveis (conferidas nos testes). */
 export const TODAS_AS_INSTRUCOES = [
-  'Toque no botão laranja.',
-  'Escute e leia a letra. Toque nela para ouvir de novo.',
-  'Escute e leia a sílaba. Toque nela para ouvir de novo.',
-  'Escute e leia. Toque para ouvir de novo.',
-  'Escute e toque a letra certa.',
-  'Escute e toque a sílaba certa.',
-  'Escute e forme a sílaba. Toque nas letras na ordem certa.',
-  'Escute a palavra. Toque na sílaba que falta.',
-  'Toque nas sílabas na ordem certa para formar a palavra.',
-  'Escute a palavra. Quantas sílabas ela tem? Toque no número.',
-  'Escute e toque o número certo.',
-  'Escute e toque a palavra certa.',
-  'Escute e escreva a palavra. Toque nas teclas.',
-  'Leia e complete a frase. Toque na resposta certa.',
-  'Ligue os pares. Toque num item da esquerda e depois no par da direita.',
-  'Ligue a letra maiúscula com a letra minúscula.',
-  'Escute e leia junto. Depois, leia sozinho.',
-  'Toque nas palavras na ordem certa para formar a frase.',
-  'Conte e toque o número certo.',
-  'Faça a conta. Toque nos números da resposta.',
-  'Toque nas notas e moedas para pagar o preço.',
-  'Veja o troco. Depois, toque no valor do troco.',
-  'O dinheiro dá para comprar? Toque na resposta.',
-  'Leia a hora no relógio. Toque na hora certa.',
+  'Escute e leia a letra.',
+  'Escute e leia a sílaba.',
+  'Escute e leia.',
+  'Escute e toque a letra.',
+  'Ouça e fale.',
+  'Qual é a sílaba?',
+  'Forme a sílaba.',
+  'Complete a palavra.',
+  'Forme a palavra.',
+  'Quantas sílabas?',
+  'Qual é o número?',
+  'Qual é a palavra?',
+  'Escreva a palavra.',
+  'Complete a frase.',
+  'Ligue os pares.',
+  'Ligue a maiúscula com a minúscula.',
+  'Escute e leia junto.',
+  'Forme a frase.',
+  'Conte e toque o número.',
+  'Faça a conta.',
+  'Pague o preço.',
+  'Quanto é o troco?',
+  'O dinheiro dá?',
+  'Que horas são?',
 ];
 
 /** Frases de acerto (variam). */
