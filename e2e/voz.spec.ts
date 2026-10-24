@@ -1,46 +1,9 @@
-// A voz em ritmo natural. Usa uma voz "de mentira" que anota cada fala.
+// A voz em ritmo natural. Usa uma voz "de mentira" que anota cada fala (e2e/vozes-de-teste.ts).
 import { test, expect } from '@playwright/test';
 import { resolverAtividade } from './ajudantes';
+import { usarVozDeTeste, falasDaPagina } from './vozes-de-teste';
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    type Registro = { texto: string; rate: number; inicio: number; fim?: number };
-    const registro: Registro[] = [];
-    (window as unknown as { __falas: Registro[] }).__falas = registro;
-    let atual: { onend?: (e: unknown) => void } | null = null;
-    let timer = 0;
-    const sintese = {
-      speaking: false,
-      pending: false,
-      getVoices: () => [{ name: 'Voz de teste', lang: 'pt-BR', localService: true, default: true, voiceURI: 'teste' }],
-      addEventListener: () => undefined,
-      cancel() {
-        const u = atual;
-        atual = null;
-        clearTimeout(timer);
-        u?.onend?.({});
-      },
-      speak(u: { text: string; rate: number; onend?: (e: unknown) => void }) {
-        const r: Registro = { texto: u.text, rate: u.rate, inicio: performance.now() };
-        registro.push(r);
-        atual = u;
-        timer = window.setTimeout(() => {
-          atual = null;
-          r.fim = performance.now();
-          u.onend?.({});
-        }, 60 + u.text.length * 3);
-      },
-    };
-    Object.defineProperty(window, 'speechSynthesis', { value: sintese, configurable: true });
-    (window as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class {
-      text: string;
-      rate = 1;
-      constructor(t: string) {
-        this.text = t;
-      }
-    };
-  });
-});
+test.beforeEach(async ({ page }) => usarVozDeTeste(page));
 
 test('voz a 1,0, sem pausas longas, e a instrução não se repete no mesmo tipo', async ({ page }) => {
   await page.goto('/#/aula/24');
@@ -52,7 +15,7 @@ test('voz a 1,0, sem pausas longas, e a instrução não se repete no mesmo tipo
     await page.waitForTimeout(400); // como uma pessoa: escuta antes de tocar
     tipos.push(await resolverAtividade(page));
   }
-  const falas = await page.evaluate(() => (window as unknown as { __falas: { texto: string; rate: number; inicio: number; fim?: number }[] }).__falas);
+  const falas = await falasDaPagina(page);
   // 1) Velocidade natural
   expect(falas.length).toBeGreaterThan(10);
   for (const f of falas) expect(f.rate).toBe(1);

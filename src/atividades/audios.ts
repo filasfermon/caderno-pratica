@@ -64,6 +64,23 @@ export function audiosDaAtividade(a: Atividade): ItemAudio[] {
   }
 }
 
+/** O que é falado quando o estudante toca nas peças e teclas da atividade. */
+export function audiosDeToque(a: Atividade): ItemAudio[] {
+  switch (a.tipo) {
+    case 'monte_silaba':
+      return a.opcoes.map((t) => i('tecla', t));
+    case 'forme_palavra':
+      return a.embaralhadas.map((t) => i('silaba', t));
+    case 'escreva':
+      return a.teclas.map((t) => i('tecla', t));
+    case 'ligue':
+    case 'maiuscula':
+      return [...a.esquerda, ...a.direita].filter((t) => /^\p{L}$/u.test(t)).map((t) => i('tecla', t));
+    default:
+      return [];
+  }
+}
+
 /** Fala de abertura da aula (a mesma da tela de abertura). */
 export function falaDaAbertura(aula: Aula): string {
   return `Aula ${aula.aula}. ${aula.objetivo ?? ''}`.trim();

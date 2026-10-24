@@ -10,6 +10,7 @@ import { telaAula } from './telas/aula';
 import { registrarServiceWorker } from './pwa';
 import { prepararAulasDisponiveis } from './atividades/disponiveis';
 import { apagarDadosDeVersoesAntigas } from './dados/apagar-antigos';
+import { carregarAudiosProntos } from './audio/arquivos';
 
 function rotear(): void {
   const caminho = location.hash.replace(/^#\/?/, '').split('?')[0];
@@ -24,6 +25,8 @@ function rotear(): void {
 async function iniciar(): Promise<void> {
   apagarDadosDeVersoesAntigas();
   raiz().replaceChildren(el('p', { class: 'carregando' }, 'CARREGANDO...'));
+  // A lista dos áudios prontos de letras e sílabas (sem ela, a voz do celular fala tudo).
+  const audios = carregarAudiosProntos(import.meta.env.BASE_URL);
   try {
     // O conteúdo vem sempre do arquivo conteudo_licoes.json (nada fixo no código).
     const resposta = await fetch(`${import.meta.env.BASE_URL}conteudo_licoes.json`);
@@ -36,6 +39,7 @@ async function iniciar(): Promise<void> {
     );
     return;
   }
+  await audios;
   window.addEventListener('hashchange', rotear);
   rotear();
   prepararAulasDisponiveis(obterConteudo());
