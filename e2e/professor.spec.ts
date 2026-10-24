@@ -25,9 +25,12 @@ test('professor grava, exporta e o estudante importa o pacote', async ({ page, b
   await expect(item).toBeVisible();
   await expect(item.locator('.origem')).toHaveText('VOZ DO APARELHO');
   await expect(item.locator('.fala')).toContainText('lá');
-  await item.getByRole('button', { name: 'GRAVAR' }).click();
+  await item.locator('[data-gravar]').click();
+  await expect(item.locator('.painel-gravacao')).toHaveAttribute('data-estado', 'gravando');
   await page.waitForTimeout(1200);
-  await item.getByRole('button', { name: 'PARAR' }).click();
+  await item.locator('[data-gravar]').click(); // PARAR
+  await expect(item.locator('.painel-gravacao')).toHaveAttribute('data-estado', 'pronto');
+  await expect(item.locator('.painel-gravacao')).toHaveAttribute('data-tocou', 'sim');
   await expect(item.locator('.origem')).toHaveText('SUA GRAVAÇÃO');
 
   // Corrigir o texto falado de outro item

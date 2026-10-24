@@ -3,8 +3,9 @@
 import { el } from '../../util/dom';
 import { icones } from '../../ui/icones';
 import type { ItemAudio } from '../../audio/pronuncia';
-import { falar, pararFala, tocarAudio } from '../../audio/voz';
-import { comecarGravacao, podeGravar, type GravadorAtivo } from '../../audio/gravador';
+import { falar } from '../../audio/voz';
+import { cancelarGravacaoEmAndamento, podeGravar } from '../../audio/gravador';
+import { criarPainelGravacao } from '../../ui/painel-gravacao';
 import type { Contexto } from './contrato';
 import { config } from '../../dados/config';
 
@@ -137,56 +138,17 @@ export function criarMontagem(vagas: number, classePeca = ''): {
   };
 }
 
-let pararGravacaoAtual: (() => void) | null = null;
-
 /** Desliga o microfone se o estudante sair da tela no meio de uma gravação. */
 export function pararGravacaoDoEstudante(): void {
-  pararGravacaoAtual?.();
-  pararGravacaoAtual = null;
+  cancelarGravacaoEmAndamento();
 }
 
 /**
  * "Ouça e repita": o estudante grava a própria leitura e ouve em seguida,
- * comparando com o modelo. Sem avaliação automática. A gravação não é guardada.
+ * comparando com o modelo. Sem avaliação automática. A última gravação de cada
+ * item fica guardada só neste aparelho.
  */
-export function criarOucaERepita(modelo: () => void, aoGravar?: () => void): HTMLElement | null {
+export function criarOucaERepita(chave: string, texto: string, modelo: () => void, aoGravar?: () => void): HTMLElement | null {
   if (!podeGravar()) return null;
-  let gravador: GravadorAtivo | null = null;
-  let minhaVoz: Blob | null = null;
-  const msg = el('p', { class: 'etiqueta', 'aria-live': 'polite' });
-  const gravar = el('button', { type: 'button', class: 'botao', 'aria-label': 'Gravar a minha voz' }, icones.microfone(30), 'GRAVAR');
-  const ouvirMinha = el('button', { type: 'button', class: 'botao', disabled: true, 'aria-label': 'Ouvir a minha voz' }, icones.tocar(30), 'MINHA VOZ');
-  const ouvirModelo = el('button', { type: 'button', class: 'botao', 'aria-label': 'Ouvir o modelo', 'data-ouvir-modelo': '' }, icones.altoFalante(30), 'MODELO');
-  gravar.addEventListener('click', async () => {
-    if (gravador) {
-      const g = gravador;
-      gravador = null;
-      const r = await g.parar();
-      minhaVoz = r.blob;
-      gravar.classList.remove('gravando');
-      gravar.replaceChildren(icones.microfone(30), 'GRAVAR');
-      ouvirMinha.disabled = false;
-      msg.textContent = '';
-      void tocarAudio(minhaVoz);
-      aoGravar?.();
-      return;
-    }
-    try {
-      pararFala();
-      gravador = await comecarGravacao();
-      gravar.classList.add('gravando');
-      gravar.replaceChildren(icones.parar(30), 'PARAR');
-      msg.textContent = 'GRAVANDO... LEIA EM VOZ ALTA.';
-    } catch {
-      msg.textContent = 'O MICROFONE NÃO ESTÁ LIBERADO NESTE APARELHO.';
-    }
-  });
-  ouvirMinha.addEventListener('click', () => minhaVoz && void tocarAudio(minhaVoz));
-  ouvirModelo.addEventListener('click', modelo);
-  const caixa = el('div', {}, el('div', { class: 'ouca-repita' }, gravar, ouvirMinha, ouvirModelo), msg);
-  pararGravacaoAtual = () => {
-    gravador?.cancelar();
-    gravador = null;
-  };
-  return caixa;
+  return criarPainelGravacao({ gaveta: 'aluno', chave: `aluno:${chave}`, texto, modelo, aoSalvar: () => aoGravar?.() }).elemento;
 }

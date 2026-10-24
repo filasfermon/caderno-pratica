@@ -1003,13 +1003,21 @@ button,
   font-size: 0.9rem;
 }
 
-/* Ouça e repita (gravação do estudante) */
-.ouca-repita {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* Painel de gravação (estudante e professor) */
+.painel-gravacao {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
-.ouca-repita .botao {
+.botoes-gravacao {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.botoes-gravacao.dois {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.botoes-gravacao .botao {
   flex-direction: column;
   gap: 4px;
   font-size: 0.85rem;
@@ -1017,10 +1025,37 @@ button,
   padding: 8px 4px;
   border-width: 2px;
 }
-.gravando {
-  background: #fff1f1 !important;
-  border-color: #b3261e !important;
-  color: #8c1d18 !important;
+.botoes-gravacao .botao.gravando {
+  background: #b3261e;
+  border-color: #b3261e;
+  color: #fff;
+  font-size: 1.15rem;
+}
+.ponto-gravando {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  animation: piscar 1s steps(2, start) infinite;
+}
+@keyframes piscar {
+  to {
+    visibility: hidden;
+  }
+}
+.contador {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.aviso-gravacao {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+  min-height: 1.2em;
+}
+.item-gravacao .painel-gravacao .botao {
+  min-height: 64px;
 }
 
 /* Fim da sessão */

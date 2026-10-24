@@ -35,3 +35,14 @@ describe('instruções', () => {
     expect(vistas).toContain('Forme a palavra.');
   });
 });
+
+describe('gravação de voz', () => {
+  it('escolhe o formato nesta ordem: webm com opus, webm, mp4 (iPhone)', async () => {
+    const { formatoDeGravacao, FORMATOS } = await import('../src/audio/gravador');
+    expect(FORMATOS).toEqual(['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']);
+    expect(formatoDeGravacao(() => true)).toBe('audio/webm;codecs=opus');
+    expect(formatoDeGravacao((m) => m === 'audio/webm' || m === 'audio/mp4')).toBe('audio/webm');
+    expect(formatoDeGravacao((m) => m === 'audio/mp4')).toBe('audio/mp4'); // Safari
+    expect(formatoDeGravacao(() => false)).toBe('');
+  });
+});

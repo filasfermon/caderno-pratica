@@ -16,6 +16,8 @@ export interface OpcoesFala {
   aoLerPalavra?: (indice: number) => void;
   /** Ignora gravações e usa só a voz do aparelho (modo professor: "ouvir a voz do aparelho"). */
   soVozDoAparelho?: boolean;
+  /** Avisado quando um áudio gravado começa a tocar de verdade. */
+  aoComecar?: () => void;
 }
 
 // ---------- Escolha da melhor voz pt-BR ----------
@@ -142,12 +144,44 @@ function novaFala(resolve: () => void, aoParar: () => void = () => undefined) {
   return controle;
 }
 
+// Um só tocador de áudio para o app inteiro. No iPhone (Safari), um áudio só toca
+// depois de um toque na tela; por isso o tocador é "destravado" no primeiro toque.
+const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let tocador: HTMLAudioElement | null = null;
+let destravado = false;
+
+function obterTocador(): HTMLAudioElement {
+  if (!tocador) {
+    tocador = new Audio();
+    tocador.preload = 'auto';
+  }
+  return tocador;
+}
+
+/** Chame dentro de um toque (ex.: no botão PARAR) para garantir que o áudio seguinte toque. */
+export function destravarAudio(): void {
+  if (typeof Audio === 'undefined') return;
+  const t = obterTocador();
+  if (destravado && t.src) return;
+  destravado = true;
+  t.src = SILENCIO;
+  t.play().catch(() => undefined);
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', () => destravarAudio(), { once: true, capture: true });
+}
+
 function tocarBlob(blob: Blob, texto: string, opcoes: OpcoesFala): Promise<void> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+    const audio = obterTocador();
+    audio.pause();
+    audio.playbackRate = 1; // gravações tocam sempre na velocidade original
+    audio.src = url;
     const fala = novaFala(
       () => {
+        audio.onended = audio.onerror = audio.onloadedmetadata = null;
         URL.revokeObjectURL(url);
         resolve();
       },
@@ -160,7 +194,10 @@ function tocarBlob(blob: Blob, texto: string, opcoes: OpcoesFala): Promise<void>
     };
     // Segurança: se o áudio não avisar o fim, seguimos depois de um tempo.
     fala.timers.push(window.setTimeout(fala.terminar, 30_000));
-    audio.play().catch(fala.terminar);
+    audio.play().then(
+      () => opcoes.aoComecar?.(),
+      () => fala.terminar(),
+    );
   });
 }
 
@@ -245,8 +282,8 @@ export async function falarEmSequencia(itens: ItemAudio[]): Promise<boolean> {
 }
 
 /** Toca um áudio qualquer (ex.: a gravação do próprio estudante). */
-export function tocarAudio(blob: Blob): Promise<void> {
+export function tocarAudio(blob: Blob, opcoes: OpcoesFala = {}): Promise<void> {
   geracao++;
   pararFala();
-  return tocarBlob(blob, '', {});
+  return tocarBlob(blob, '', opcoes);
 }

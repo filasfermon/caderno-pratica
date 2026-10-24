@@ -11,11 +11,12 @@ import { lerLocal, gravarLocal } from '../dados/local';
 import { config, mudarConfig, opcoesDoConteudo, VELOCIDADE_MAXIMA, VELOCIDADE_MINIMA, type TamanhoTexto } from '../dados/config';
 import { aulasDisponiveis } from '../atividades/disponiveis';
 import { esquecerDemonstracoes, progresso, zerarProgresso } from '../dados/progresso';
-import { apagar, esvaziar, guardar, listarChaves, type Audio, type Fala } from '../dados/banco';
+import { apagar, esvaziar, guardar, listarChaves, type Fala } from '../dados/banco';
 import { audiosDaAula, audiosDoApp } from '../atividades/audios';
 import { chaveDoItem, correcaoDe, definirCorrecaoLocal, carregarCorrecoes, textoParaFala, type ItemAudio } from '../audio/pronuncia';
-import { falar, pararFala, tocarAudio, vozesPortugues } from '../audio/voz';
-import { comecarGravacao, podeGravar, type GravadorAtivo } from '../audio/gravador';
+import { falar, vozesPortugues } from '../audio/voz';
+import { cancelarGravacaoEmAndamento, podeGravar } from '../audio/gravador';
+import { criarPainelGravacao } from '../ui/painel-gravacao';
 import { exportarPacote, importarPacote } from '../audio/pacote';
 
 // ---------- PIN ----------
@@ -107,8 +108,6 @@ function telaMenu(): void {
 
 // ---------- Gravações ----------
 
-let gravadorAtivo: GravadorAtivo | null = null;
-
 function rotuloOrigem(origem: string): string {
   return origem === 'professor' ? 'SUA GRAVAÇÃO' : origem === 'pacote' ? 'DO PACOTE' : 'VOZ DO APARELHO';
 }
@@ -126,35 +125,22 @@ function linhaDeGravacao(item: ItemAudio, chavesProprias: Set<string>, chavesPac
   };
   const ouvir = el('button', { type: 'button', class: 'botao' }, icones.altoFalante(22), 'OUVIR');
   ouvir.addEventListener('click', () => void falar(item));
-  const gravar = el('button', { type: 'button', class: 'botao', hidden: !podeGravar() }, icones.microfone(22), 'GRAVAR');
-  gravar.addEventListener('click', async () => {
-    if (gravadorAtivo && gravar.classList.contains('gravando')) {
-      const g = gravadorAtivo;
-      gravadorAtivo = null;
-      const r = await g.parar();
-      gravar.classList.remove('gravando');
-      gravar.replaceChildren(icones.microfone(22), 'REGRAVAR');
-      await guardar<Audio>('gravacoes', { chave, texto: item.texto, blob: r.blob, mime: r.mime, data: Date.now() });
-      chavesProprias.add(chave);
-      atualizar();
-      void tocarAudio(r.blob);
-      return;
-    }
-    if (gravadorAtivo) return; // outra gravação em andamento
-    try {
-      pararFala();
-      gravadorAtivo = await comecarGravacao();
-      gravar.classList.add('gravando');
-      gravar.replaceChildren(icones.parar(22), 'PARAR');
-    } catch {
-      fala.textContent = 'Não foi possível usar o microfone. Verifique a permissão do navegador.';
-    }
-  });
+  // Gravar: GRAVAR → PARAR (vermelho, com contador) → salva e toca na hora → OUVIR DE NOVO.
+  const painel = podeGravar()
+    ? criarPainelGravacao({
+        gaveta: 'gravacoes',
+        chave,
+        texto: item.texto,
+        aoSalvar: () => {
+          chavesProprias.add(chave);
+          atualizar();
+        },
+      }).elemento
+    : null;
   const apagarBtn = el('button', { type: 'button', class: 'botao' }, icones.lixeira(22), 'APAGAR');
   apagarBtn.addEventListener('click', async () => {
     await apagar('gravacoes', chave);
     chavesProprias.delete(chave);
-    gravar.replaceChildren(icones.microfone(22), 'GRAVAR');
     atualizar();
   });
   const editar = el('button', { type: 'button', class: 'botao' }, 'EDITAR FALA');
@@ -200,10 +186,10 @@ function linhaDeGravacao(item: ItemAudio, chavesProprias: Set<string>, chavesPac
     { class: 'item-gravacao' },
     el('div', { class: 'cabeca' }, el('span', { class: 'texto' }, item.texto), origem),
     fala,
-    el('div', { class: 'acoes' }, ouvir, gravar, apagarBtn, editar),
+    el('div', { class: 'acoes' }, ouvir, apagarBtn, editar),
+    painel,
     editor,
   );
-  if (chavesProprias.has(chave)) gravar.replaceChildren(icones.microfone(22), 'REGRAVAR');
   atualizar();
   return linha;
 }
@@ -435,6 +421,7 @@ function telaEstudante(): void {
       return;
     }
     zerarProgresso();
+    void esvaziar('aluno'); // as gravações do estudante também saem
     msg.hidden = false;
     msg.textContent = 'PROGRESSO APAGADO. O ESTUDANTE COMEÇA DO ZERO NESTE APARELHO.';
     apagarBtn.disabled = true;
@@ -475,10 +462,7 @@ function telaTrocarPin(): void {
 
 export function telaProfessor(partes: string[]): void {
   if (!liberado) return telaPin();
-  if (gravadorAtivo) {
-    gravadorAtivo.cancelar();
-    gravadorAtivo = null;
-  }
+  cancelarGravacaoEmAndamento();
   const [secao, a, b] = partes;
   switch (secao) {
     case 'gravacoes':
@@ -499,7 +483,6 @@ export function telaProfessor(partes: string[]): void {
 
 /** Usado ao trocar de tela: desliga o microfone do professor, se estiver gravando. */
 export function pararGravacaoDoProfessor(): void {
-  gravadorAtivo?.cancelar();
-  gravadorAtivo = null;
+  cancelarGravacaoEmAndamento();
 }
 

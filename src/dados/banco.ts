@@ -6,8 +6,9 @@
 //   pacote        → áudios do pacote .zip importado (camada b)
 //   falas         → textos falados editados pelo professor (correções de pronúncia)
 //   falas_pacote  → textos falados que vieram no pacote importado
+//   aluno         → a última gravação do estudante em cada item ("Ouça e repita")
 
-export type Gaveta = 'gravacoes' | 'pacote' | 'falas' | 'falas_pacote';
+export type Gaveta = 'gravacoes' | 'pacote' | 'falas' | 'falas_pacote' | 'aluno';
 
 export interface Audio {
   chave: string;
@@ -23,7 +24,7 @@ export interface Fala {
 }
 
 const NOME = 'caderno-pratica';
-const VERSAO = 1;
+const VERSAO = 2;
 let abertura: Promise<IDBDatabase> | null = null;
 
 function abrir(): Promise<IDBDatabase> {
@@ -32,7 +33,7 @@ function abrir(): Promise<IDBDatabase> {
     const pedido = indexedDB.open(NOME, VERSAO);
     pedido.onupgradeneeded = () => {
       const db = pedido.result;
-      for (const g of ['gravacoes', 'pacote', 'falas', 'falas_pacote']) {
+      for (const g of ['gravacoes', 'pacote', 'falas', 'falas_pacote', 'aluno']) {
         if (!db.objectStoreNames.contains(g)) db.createObjectStore(g, { keyPath: 'chave' });
       }
     };
