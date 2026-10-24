@@ -57,6 +57,7 @@ test('voz a 1,0, sem pausas longas, e a instrução não se repete no mesmo tipo
   for (let i = 0; i < 14; i++) {
     await page.waitForSelector('[data-sessao], [data-fim]');
     if (await page.locator('[data-fim]').count()) break;
+    await page.waitForTimeout(400); // como uma pessoa: escuta antes de tocar
     tipos.push(await resolverAtividade(page));
   }
   const falas = await page.evaluate(() => (window as unknown as { __falas: { texto: string; rate: number; inicio: number; fim?: number }[] }).__falas);

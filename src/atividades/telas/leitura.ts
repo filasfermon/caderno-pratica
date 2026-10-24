@@ -106,6 +106,8 @@ interface ConfigPecas {
   classeGrade?: string;
   /** Compara a montagem com a resposta (padrão: peça por peça). */
   confere?: (montada: string[]) => boolean;
+  /** Como juntar as peças para mostrar a resposta dada ("" para sílabas, " " para palavras). */
+  separador?: string;
 }
 
 export interface Pecas {
@@ -135,12 +137,13 @@ export function criarPecas(ctx: Contexto, cfg: ConfigPecas): Pecas {
         usados.push(b);
       }
       if (montagem.pecas.length === cfg.resposta.length) {
+        const resposta = montagem.pecas.join(cfg.separador ?? '');
         if (confere(montagem.pecas)) {
           travado = true;
           montagem.marcarCerta();
           botoes.forEach((x) => (x.disabled = true));
-          ctx.acertou();
-        } else ctx.errou();
+          ctx.acertou(resposta);
+        } else ctx.errou(resposta);
       }
     });
     return b;
@@ -350,6 +353,7 @@ export function montarOrdene(a: Ordene, ctx: Contexto): Controle {
     classePeca: 'frase',
     classeGrade: '',
     confere: (m) => m.join(' ') === a.palavras.join(' '),
+    separador: ' ',
   });
   pecas.grade.querySelectorAll('button').forEach((b) => (b.style.fontSize = '1.6rem'));
   ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);

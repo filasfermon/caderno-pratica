@@ -61,14 +61,15 @@ export function criarEscolha(ctx: Contexto, opcoes: OpcaoEscolha[], classeGrade 
     );
     b.addEventListener('click', () => {
       if (travado) return;
+      const resposta = typeof o.conteudo === 'string' ? o.conteudo : o.rotulo;
       if (o.certa) {
         b.classList.add('certa');
         travar();
-        ctx.acertou();
+        ctx.acertou(resposta);
       } else {
         b.classList.add('tentou');
         b.disabled = true;
-        ctx.errou();
+        ctx.errou(resposta);
       }
     });
     botoes.push(b);

@@ -1,6 +1,6 @@
 // Ajudantes do teste de ponta a ponta: fazem uma sessão inteira, atividade por atividade.
 // Cada tela de atividade guarda a resposta esperada em data-resposta (só para os testes).
-import { expect, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
 async function esperarFimDaDemonstracao(page: Page): Promise<void> {
   await page.waitForFunction(() => !document.querySelector('[data-sessao][data-demo]'), null, { timeout: 90_000 });
@@ -51,10 +51,9 @@ export async function resolverAtividade(page: Page): Promise<string> {
       await clicarSePuder(page, '.area [data-certo="sim"]');
   }
   if (['conheca', 'leia', 'diga_letra'].includes(tipo)) {
-    // Atividades só de ouvir/ler/falar: o estudante decide quando seguir.
-    const seguir = page.locator('[data-seguir]');
-    await expect(seguir).toBeVisible({ timeout: 30_000 });
-    await seguir.click();
+    // Atividades só de ouvir/ler/falar: contam como feitas depois de ouvidas; o estudante toca AVANÇAR.
+    await page.waitForSelector('[data-sessao][data-feita="sim"]', { timeout: 30_000 });
+    await page.locator('[data-avancar]').click();
   }
   // Depois do acerto (ou da resposta mostrada), o próximo item começa sozinho.
   await page.waitForFunction(
@@ -73,6 +72,6 @@ export async function fazerSessao(page: Page): Promise<string[]> {
     if (await page.locator('[data-fim]').count()) return feitos;
     feitos.push(await resolverAtividade(page));
   }
-  await expect(page.locator('[data-fim]')).toBeVisible();
+  await page.waitForSelector('[data-fim]');
   return feitos;
 }

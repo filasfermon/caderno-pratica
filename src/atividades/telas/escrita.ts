@@ -190,6 +190,18 @@ export function montarLigue(a: Ligue | Maiuscula, ctx: Contexto): Controle {
   requestAnimationFrame(desenharLinhas);
   return {
     passosDemo: (): PassoDemo[] => a.pares.slice(0, 2).flatMap(([i, j]) => [() => esquerda[i], () => direita[j]]),
+    // Ao voltar a esta atividade: todos os pares aparecem ligados.
+    mostrarResposta: async () => {
+      travado = true;
+      for (const [i, j] of a.pares) if (!ligados.some(([x]) => x === i)) {
+        ligados.push([i, j]);
+        for (const b of [esquerda[i], direita[j]]) {
+          b.classList.add('ligado');
+          b.disabled = true;
+        }
+      }
+      requestAnimationFrame(desenharLinhas);
+    },
     travar: () => (travado = true),
   };
 }

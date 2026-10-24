@@ -87,61 +87,116 @@ export function telaAula(numero: number): void {
 }
 
 // ---------- Sessão ----------
+//
+// Navegação livre: cada bolinha leva direto à sua atividade; VOLTAR e AVANÇAR andam
+// uma de cada vez; TERMINAR encerra quando quiser. Pular ou voltar NÃO conta como erro:
+// só a resposta dada entra no progresso e na repetição espaçada.
+
+interface EstadoAtividade {
+  feita: boolean;
+  /** O que o estudante respondeu (para mostrar quando ele voltar a esta atividade). */
+  resposta?: string;
+  /** certo = acertou; mostrada = o app mostrou a resposta depois do 2º erro; ouvida = só de ouvir/ler/falar. */
+  resultado?: 'certo' | 'mostrada' | 'ouvida';
+}
 
 function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
   const { aula, atividades } = sessao;
+  const estados: EstadoAtividade[] = atividades.map(() => ({ feita: false }));
   let indice = 0;
+  let visita = 0; // muda a cada tela de atividade: tarefas antigas param sozinhas
   // Tipo de atividade cuja instrução acabou de ser falada: se o próximo item for do
   // mesmo tipo, a instrução não é repetida (só o som ou a palavra do novo item).
   let tipoInstruido: string | null = null;
-  const sair = el('a', { class: 'botao-icone contorno', href: `#/escolher/unidade/${aula.unidade}`, 'aria-label': 'Sair da aula' }, icones.fechar(26), el('span', {}, 'SAIR'));
-  const bolinhas = el('ol', { class: 'bolinhas', 'aria-label': 'Progresso da sessão' });
+  let falaDaNavegacao: string | null = null;
+
+  const terminar = el('button', { type: 'button', class: 'botao-icone contorno', 'data-terminar': '' }, icones.fechar(26), el('span', {}, 'TERMINAR'));
+  const bolinhas = el('ol', { class: 'bolinhas' });
+  const navBolinhas = el('nav', { 'aria-label': 'Atividades da sessão' }, bolinhas);
   const textoInstrucao = el('p', { id: 'instrucao' });
   const ouvirInstrucao = el('button', { type: 'button', class: 'botao-ouvir', 'aria-label': 'Ouvir a instrução de novo' }, icones.altoFalante(34));
   const selo = el('span', { class: 'selo-revisao', hidden: true }, 'REVISÃO');
   const faixa = el('div', { class: 'demonstracao-faixa', hidden: true }, 'VEJA COMO SE FAZ');
   const area = el('div', { class: 'area' });
   const mensagem = el('p', { class: 'mensagem-retorno', 'aria-live': 'assertive' });
-  const rodape = el('div', { class: 'rodape' });
+  const refazer = el('div', { class: 'refazer', hidden: true });
+  const voltar = el('button', { type: 'button', class: 'botao navegar', 'data-voltar': '' }, el('span', { 'aria-hidden': 'true' }, '◀'), 'VOLTAR');
+  const avancar = el('button', { type: 'button', class: 'botao navegar', 'data-avancar': '' }, 'AVANÇAR', el('span', { 'aria-hidden': 'true' }, '▶'));
+  const rodape = el('div', { class: 'rodape navegacao' }, voltar, avancar);
   const corpo = el(
     'section',
     { class: 'sessao', 'data-sessao': '' },
-    el('header', { class: 'topo' }, sair, bolinhas),
+    el('header', { class: 'topo' }, terminar, el('span', { class: 'titulo-sessao' }, `AULA ${aula.aula}`)),
+    navBolinhas,
     el('h1', { class: 'visualmente-oculto' }, `Aula ${aula.aula}: prática`),
     selo,
     faixa,
     el('div', { class: 'instrucao' }, ouvirInstrucao, textoInstrucao),
+    refazer,
     area,
     mensagem,
     rodape,
   );
   const minhaTela = mostrarTela(`Aula ${aula.aula}`, corpo);
   const viva = () => telaAtual() === minhaTela;
+  const feitas = () => estados.filter((e) => e.feita).length;
+
+  const encerrar = () => {
+    if (!viva()) return;
+    visita++;
+    pararFala();
+    if (feitas() > 0) terminarSessao(aula.aula);
+    telaFim(aula, feitas());
+  };
+  const irPara = (i: number, fala?: string) => {
+    if (!viva()) return;
+    visita++;
+    if (i >= atividades.length) return encerrar();
+    indice = Math.max(0, i);
+    falaDaNavegacao = fala ?? null;
+    void mostrarAtividade();
+  };
+  terminar.addEventListener('click', encerrar);
+  voltar.addEventListener('click', () => indice > 0 && irPara(indice - 1, 'Voltar.'));
+  avancar.addEventListener('click', () => irPara(indice + 1, 'Avançar.'));
 
   const desenharBolinhas = () => {
     bolinhas.replaceChildren(
-      ...atividades.map((_, i) =>
-        el('li', { class: i < indice ? 'feita' : i === indice ? 'atual' : '', 'aria-current': i === indice ? 'step' : undefined }),
-      ),
+      ...atividades.map((_, i) => {
+        const atual = i === indice;
+        const feita = estados[i].feita;
+        const rotulo = `Atividade ${i + 1} de ${atividades.length}${feita ? ', feita' : ''}`;
+        const botao = el(
+          'button',
+          {
+            type: 'button',
+            class: `bolinha${atual ? ' atual' : ''}${feita ? ' feita' : ''}`,
+            'aria-label': rotulo,
+            'aria-current': atual ? 'step' : undefined,
+            'data-bolinha': i,
+          },
+          el('span', { class: 'ponto', 'aria-hidden': 'true' }, feita ? '✓' : ''),
+        );
+        botao.addEventListener('click', () => i !== indice && irPara(i));
+        return el('li', {}, botao);
+      }),
     );
-    bolinhas.setAttribute('aria-label', `Atividade ${indice + 1} de ${atividades.length}`);
   };
 
   const mostrarAtividade = async () => {
     if (!viva()) return;
-    if (indice >= atividades.length) {
-      terminarSessao(aula.aula);
-      telaFim(aula, atividades.length);
-      return;
-    }
+    const minhaVisita = visita;
     const at = atividades[indice];
     desenharBolinhas();
-    rodape.replaceChildren();
     mensagem.textContent = '';
     mensagem.className = 'mensagem-retorno';
+    refazer.hidden = true;
     selo.hidden = !at.revisao;
     corpo.dataset.tipo = at.tipo;
     corpo.dataset.indice = String(indice);
+    corpo.dataset.feita = estados[indice].feita ? 'sim' : 'nao';
+    voltar.disabled = indice === 0;
+    avancar.classList.remove('principal');
     const instrucao = instrucaoDe(at);
     textoInstrucao.textContent = instrucao;
     // O alto-falante sempre fala a instrução completa.
@@ -149,51 +204,85 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     window.scrollTo(0, 0);
 
     if (!jaViuTipo(at.tipo)) {
-      await demonstrar(at, area, faixa, sorteio, viva);
-      if (!viva()) return;
+      await demonstrar(at, area, faixa, sorteio, () => viva() && visita === minhaVisita);
+      if (!viva() || visita !== minhaVisita) return;
       marcarTipoVisto(at.tipo);
       tipoInstruido = at.tipo; // a demonstração já falou a instrução
     }
-    executar(at, instrucao);
+    const estado = estados[indice];
+    if (estado.feita && estado.resultado !== 'ouvida') mostrarRespostaDada(at, estado);
+    else executar(at, instrucao);
+  };
+
+  /** Volta a uma atividade já respondida: mostra a resposta dada e oferece FAZER DE NOVO. */
+  const mostrarRespostaDada = (at: Atividade, estado: EstadoAtividade) => {
+    area.replaceChildren();
+    const minhaVisita = visita;
+    let silencio = true;
+    const ctx: Contexto = {
+      area,
+      sorteio,
+      emDemonstracao: () => false,
+      falar: (item, opcoes) => (silencio ? Promise.resolve() : falar(item, opcoes)),
+      acertou: () => undefined,
+      errou: () => undefined,
+      errouParcial: () => undefined,
+      concluir: () => undefined,
+    };
+    const controle = montarAtividade(at, ctx);
+    void Promise.resolve(controle.mostrarResposta?.()).then(() => {
+      silencio = false;
+    });
+    controle.travar?.();
+    const certo = estado.resultado === 'certo';
+    const texto = certo
+      ? `✓ VOCÊ JÁ FEZ ESTA ATIVIDADE${estado.resposta ? `: ${estado.resposta}` : ''}.`
+      : `VOCÊ RESPONDEU${estado.resposta ? `: ${estado.resposta}` : ''}. A RESPOSTA CERTA ESTÁ DESTACADA.`;
+    const botao = el('button', { type: 'button', class: 'botao principal', 'data-refazer': '' }, 'FAZER DE NOVO');
+    botao.addEventListener('click', () => {
+      if (visita !== minhaVisita) return;
+      visita++;
+      refazer.hidden = true;
+      executar(at, instrucaoDe(at));
+    });
+    refazer.replaceChildren(el('p', { class: 'resposta-dada' }, texto), botao);
+    refazer.hidden = false;
+    avancar.classList.add('principal');
+    void falarEmSequencia([...(falaDaNavegacao ? [{ categoria: 'retorno' as const, texto: falaDaNavegacao }] : []), { categoria: 'retorno', texto: 'Você já fez esta atividade.' }]);
+    falaDaNavegacao = null;
   };
 
   const executar = (at: Atividade, instrucao: string) => {
     area.replaceChildren();
-    // Esta atividade continua "valendo" enquanto a tela e o índice forem os mesmos.
+    mensagem.textContent = '';
+    // Esta atividade continua "valendo" enquanto a tela e a visita forem as mesmas.
+    const minhaVisita = visita;
     const meuIndice = indice;
-    const vale = () => viva() && indice === meuIndice;
+    const vale = () => viva() && visita === minhaVisita;
     let tentativas = 0;
     let teveErro = false;
     let terminado = false;
     let controle: Controle = {};
-    // Depois do retorno (acerto ou resposta mostrada), o próximo item começa logo.
-    const avancar = () => {
-      if (!vale()) return;
-      indice++;
-      void mostrarAtividade();
+    const registrar = (resultado: EstadoAtividade['resultado'], resposta?: string) => {
+      estados[meuIndice] = { feita: true, resultado, resposta };
+      corpo.dataset.feita = 'sim';
+      desenharBolinhas();
     };
-    const seguir = () => {
-      if (rodape.querySelector('[data-seguir]')) return;
-      const b = el('button', { type: 'button', class: 'botao principal', 'data-seguir': '' }, 'SEGUIR', icones.seguir(34));
-      b.addEventListener('click', () => {
-        if (!vale()) return;
-        indice++;
-        void mostrarAtividade();
-      });
-      rodape.replaceChildren(b);
-      b.focus({ preventScroll: true });
-      b.scrollIntoView({ block: 'nearest', behavior: animacoesLigadas() ? 'smooth' : 'auto' });
+    // Depois do retorno (acerto ou resposta mostrada), o próximo item começa logo.
+    const seguirSozinho = () => {
+      if (vale()) irPara(meuIndice + 1);
     };
     const ctx: Contexto = {
       area,
       sorteio,
       emDemonstracao: () => false,
       falar: (item, opcoes) => falar(item, opcoes),
-      acertou: () => {
+      acertou: (resposta) => {
         if (terminado) return;
         terminado = true;
         controle.travar?.();
         marcarResultado(at.chave, at.aula, !teveErro);
+        registrar('certo', resposta);
         somDeAcerto();
         mostrarSinalDeCerto();
         const frase = sortearUm(FRASES_ACERTO, sorteio);
@@ -203,10 +292,10 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
           await falar({ categoria: 'retorno', texto: frase });
           if (!vale()) return;
           await controle.aoAcertar?.();
-          avancar();
+          seguirSozinho();
         })();
       },
-      errou: () => {
+      errou: (resposta) => {
         if (terminado) return;
         tentativas++;
         teveErro = true;
@@ -222,12 +311,13 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
           terminado = true;
           controle.travar?.();
           marcarResultado(at.chave, at.aula, false);
+          registrar('mostrada', resposta);
           mensagem.textContent = FRASE_RESPOSTA.toLocaleUpperCase('pt-BR');
           void (async () => {
             await falar({ categoria: 'retorno', texto: FRASE_RESPOSTA });
             if (!vale()) return;
             await controle.mostrarResposta?.();
-            avancar();
+            seguirSozinho();
           })();
         }
       },
@@ -240,19 +330,23 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         if (terminado) return;
         terminado = true;
         marcarResultado(at.chave, at.aula, true);
-        seguir();
+        registrar('ouvida');
+        // Só ouvir, ler e falar: o estudante decide quando seguir (AVANÇAR fica em destaque).
+        avancar.classList.add('principal');
+        avancar.focus({ preventScroll: true });
       },
     };
     controle = montarAtividade(at, ctx);
     const repetirInstrucao = tipoInstruido !== at.tipo;
     tipoInstruido = at.tipo;
+    const antes = falaDaNavegacao ? [{ categoria: 'retorno' as const, texto: falaDaNavegacao }] : [];
+    falaDaNavegacao = null;
     void (async () => {
-      const ok = repetirInstrucao ? await falarEmSequencia([{ categoria: 'instrucao', texto: instrucao }]) : true;
+      const ok = await falarEmSequencia([...antes, ...(repetirInstrucao ? [{ categoria: 'instrucao' as const, texto: instrucao }] : [])]);
       if (!vale() || terminado) return;
-      if (ok) await controle.modelo?.();
-      else if (ehSoDeOuvir(at)) await controle.modelo?.();
+      if (ok || ehSoDeOuvir(at)) await controle.modelo?.();
     })();
-    // Conheça e Leia: se a pessoa já tocou em algo, o SEGUIR aparece mesmo assim, sem pressa.
+    // Conheça, Leia e Diga: depois de um tempo, a atividade conta como feita mesmo sem tocar em nada.
     if (ehSoDeOuvir(at)) setTimeout(() => vale() && !terminado && ctx.concluir(), 8000);
   };
 
@@ -341,9 +435,11 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
 
 // ---------- Fim da sessão ----------
 
+/** Tela final: mostra quantas atividades foram feitas (nunca quantas faltaram). */
 function telaFim(aula: Aula, praticadas: number): void {
-  const incentivo = FRASES_FIM[Math.floor(Math.random() * FRASES_FIM.length)];
-  const fala = `Você praticou ${praticadas} atividades. ${incentivo}`;
+  const incentivo = praticadas > 0 ? FRASES_FIM[Math.floor(Math.random() * FRASES_FIM.length)] : 'Até a próxima prática.';
+  const frase = praticadas === 1 ? 'Você praticou 1 atividade.' : `Você praticou ${praticadas} atividades.`;
+  const fala = praticadas > 0 ? `${frase} ${incentivo}` : incentivo;
   const denovo = el('button', { type: 'button', class: 'botao principal', 'data-praticar-de-novo': '' }, 'PRATICAR DE NOVO');
   denovo.addEventListener('click', () => irPara(`#/aula/${aula.aula}?${Date.now()}`));
   mostrarTela(
@@ -352,8 +448,8 @@ function telaFim(aula: Aula, praticadas: number): void {
       'section',
       { class: 'fim', 'data-fim': '' },
       el('div', { class: 'estrela', 'aria-hidden': 'true' }, icones.estrela(96)),
-      el('h1', { class: 'grande' }, `VOCÊ PRATICOU ${praticadas} ATIVIDADES.`),
-      el('p', { class: 'objetivo', style: { fontSize: '1.3rem', margin: '0' } }, incentivo.toLocaleUpperCase('pt-BR')),
+      el('h1', { class: 'grande' }, praticadas > 0 ? frase.toLocaleUpperCase('pt-BR') : 'ATÉ A PRÓXIMA.'),
+      praticadas > 0 ? el('p', { class: 'objetivo', style: { fontSize: '1.3rem', margin: '0' } }, incentivo.toLocaleUpperCase('pt-BR')) : null,
       el('div', { style: { display: 'flex', justifyContent: 'center' } }, botaoOuvir(() => fala)),
       el('div', { class: 'pilha' }, denovo, el('a', { class: 'botao', href: `#/escolher/unidade/${aula.unidade}` }, icones.voltar(28), 'VOLTAR')),
     ),

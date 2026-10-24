@@ -75,8 +75,8 @@ export function montarConta(a: Conta, ctx: Contexto): Controle {
     const n = parseFloat(digitado.replace(',', '.'));
     if (Math.abs(n - a.resultado) < 0.001) {
       travado = true;
-      ctx.acertou();
-    } else ctx.errou();
+      ctx.acertou(digitado);
+    } else ctx.errou(digitado);
   };
   const { teclado, pronto, botoes } = criarTecladoNumerico(
     !Number.isInteger(a.resultado),
@@ -171,10 +171,11 @@ export function montarPague(a: Pague, ctx: Contexto): Controle {
   const pronto = el('button', { type: 'button', class: 'botao principal', 'data-pronto': '' }, icones.certo(30), 'PRONTO');
   pronto.addEventListener('click', () => {
     if (travado || !naMao.length) return;
-    if (naMao.reduce((s, v) => s + v, 0) === a.preco) {
+    const total = naMao.reduce((s, v) => s + v, 0);
+    if (total === a.preco) {
       travado = true;
-      ctx.acertou();
-    } else ctx.errou();
+      ctx.acertou(formatarReais(total));
+    } else ctx.errou(formatarReais(total));
   });
   desenharMao();
   ctx.area.append(

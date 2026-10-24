@@ -9,10 +9,10 @@ export interface Contexto {
   /** Onde a atividade se desenha. */
   area: HTMLElement;
   sorteio: Sorteio;
-  /** Avisa que o estudante acertou (a sessão dá o retorno e libera o SEGUIR). */
-  acertou(): void;
+  /** Avisa que o estudante acertou. "resposta" é o que ele respondeu (mostrado se ele voltar). */
+  acertou(resposta?: string): void;
   /** Avisa um erro. 1º erro: "Vamos tentar de novo". 2º erro: mostra a resposta. */
-  errou(): void;
+  errou(resposta?: string): void;
   /** Erro "pequeno" numa atividade de várias partes (ex.: um par do Ligue): só pede nova tentativa. */
   errouParcial(): void;
   /** Para atividades sem certo/errado (Conheça, Leia): libera o SEGUIR. */
