@@ -2,41 +2,44 @@
 
 Aplicativo para **revisar e reforçar** as aulas do *Caderno de Alfabetização · Volume 1*.
 O estudante estuda a aula no caderno com o professor e, depois, pratica **a mesma aula**
-sozinho, em casa, no celular. Tudo é falado em voz alta. Funciona **sem internet**
-depois da primeira vez.
+sozinho, no celular. Tudo é falado em voz alta. Funciona **sem internet** depois da
+primeira vez.
 
-- Sem senha do estudante, sem anúncios, sem coleta de dados.
-- Sem conta, tudo fica guardado só no celular. Quem quiser pode **entrar com a conta
-  Google**: o progresso fica guardado na conta e aparece em qualquer celular
-  (as gravações de voz continuam só no celular e no pacote .zip).
-- Tamanho: menos de 0,5 MB (sem os áudios gravados; com a conta Google ligada, cerca de 1,1 MB).
+**O app é igual para qualquer pessoa: abre o link e usa.**
 
-> **Novidades (6 correções):** só atividades de ouvir, ler e falar · voz em ritmo natural ·
-> bolinhas que navegam (VOLTAR, AVANÇAR, TERMINAR) · qualquer aula abre livremente ·
-> gravação de voz confiável · ENTRAR COM GOOGLE e publicação na Cloudflare.
-> Detalhes na seção 6.
+- **Sem conta, sem cadastro, sem senha** e sem modo professor.
+- **Não guarda nenhum dado no aparelho**: nem progresso, nem nome, nem configuração,
+  nem gravação. Não usa `localStorage`, `sessionStorage`, IndexedDB nem cookies.
+- **Nunca pede o microfone** e não grava nada.
+- A única coisa guardada no celular é o **cache dos arquivos do próprio app** (do service
+  worker), para ele abrir sem internet. Esse cache é igual para todo mundo e não tem
+  dado de ninguém.
+- Sem anúncios e sem coleta de dados.
+- Tamanho: **0,41 MB** sem os áudios de letras e sílabas (veja a seção 4).
 
 ---
 
 ## 1. Endereço e instalação no celular
 
-**Endereço do app:** <https://filasfermon.github.io/caderno-pratica/> (GitHub Pages, sem conta Google).
-Com a Cloudflare configurada, o endereço principal passa a ser o da Cloudflare
-(ex.: `https://caderno-pratica.pages.dev`), com **ENTRAR COM GOOGLE** — veja
-[`CONFIGURAR_FIREBASE_E_CLOUDFLARE.md`](CONFIGURAR_FIREBASE_E_CLOUDFLARE.md).
+**Endereço do app:** <https://filasfermon.github.io/caderno-pratica/> (GitHub Pages,
+publicado sozinho a cada mudança na branch `main`).
+
+Também está pronto para a **Cloudflare Pages** (opcional, endereço como
+`https://caderno-pratica.pages.dev`). O passo a passo, para quem não é programador, está em
+[`PUBLICAR_NA_CLOUDFLARE.md`](PUBLICAR_NA_CLOUDFLARE.md).
 
 **Instalar no Android (Chrome):**
 
 1. Abra o endereço acima no **Chrome**, com internet.
-2. Espere a tela inicial aparecer (o app se guarda sozinho no celular).
+2. Espere a tela **ESCOLHER A AULA** aparecer (o app se guarda sozinho no celular).
 3. Toque nos **três pontinhos ⋮** no canto de cima.
-4. Toque em **"Adicionar à tela inicial"** (ou **"Instalar app"**).
+4. Toque em **"Instalar app"** (ou **"Adicionar à tela inicial"**).
 5. Confirme. O ícone laranja **"Caderno Prática"** aparece na tela do celular.
-
-Pronto: a partir daí o app abre mesmo sem internet.
 
 **Instalar no iPhone (Safari):** abra o endereço no **Safari** → botão **Compartilhar**
 (quadrado com seta para cima) → **Adicionar à Tela de Início** → **Adicionar**.
+
+Pronto: a partir daí o app abre mesmo sem internet.
 
 > Dica: se aparecer na parte de baixo a faixa **"NOVA VERSÃO DISPONÍVEL"**,
 > toque em **ATUALIZAR** (precisa de internet só nesse momento).
@@ -45,83 +48,142 @@ Pronto: a partir daí o app abre mesmo sem internet.
 
 ## 2. Como o estudante usa (5 passos)
 
-1. **Toque no ícone laranja** do Caderno Prática. Na primeira vez (se a conta Google
-   estiver configurada), escolha **ENTRAR COM GOOGLE** ou **ENTRAR SEM CONTA**.
-2. **Toque em CONTINUAR** para voltar à última aula. Ou toque em **ESCOLHER A AULA**
-   e procure o número da aula que está no caderno (dá para digitar só o número).
-   **Qualquer aula abre**, mesmo sem ter feito as anteriores.
-3. **Escute a voz** e escolha **SÓ ESTA AULA** (o normal) ou **ESTA AULA + REVISÃO**.
-   O botão laranja com alto-falante 🔊 repete a fala.
+1. **Toque no ícone laranja.** O app abre direto em **ESCOLHER A AULA**, em letras grandes.
+2. **Escolha a aula**: toque na **Parte**, depois na **Unidade** e na **Aula** — ou digite o
+   número da aula que está no caderno e toque em **IR**. Qualquer aula abre, mesmo sem ter
+   feito as anteriores.
+3. **Escute a voz** e toque em **SÓ ESTA AULA** (o normal) ou **ESTA AULA + REVISÃO**.
 4. **Faça as atividades**, uma por tela. Depois de um acerto, a próxima começa sozinha.
-   As **bolinhas** no alto levam a qualquer atividade (a atual é maior; as feitas têm ✓).
-   **◀ VOLTAR** e **AVANÇAR ▶** andam uma de cada vez. Pular não conta como erro.
+   - As **bolinhas** no alto levam a qualquer atividade (a atual é maior; as feitas têm ✓).
+   - **◀ VOLTAR** e **AVANÇAR ▶** andam uma de cada vez. Pular não conta como erro.
+   - O **alto-falante** 🔊 repete a fala; a **tartaruga** 🐢 repete a mesma fala uma vez mais devagar.
+   - O que o estudante **errar volta uma vez no fim** da mesma prática (com o selo **DE NOVO**).
 5. Toque em **TERMINAR** quando quiser. A tela final mostra quantas atividades foram feitas.
-   Em **MEU PROGRESSO**, o estudante mostra ao professor as aulas que já praticou (✓).
+   Ao sair, **nada fica guardado**.
 
 Quando o estudante erra, o app **não diz "errado"**: a voz diz *"Vamos tentar de novo"*
 e repete o modelo. Se errar de novo, o app mostra a resposta certa, lê em voz alta e segue.
 Não há cronômetro, pontos, vidas nem ranking.
 
----
-
-## 3. O professor: gravar a própria voz e passar para os celulares
-
-O app fala com a voz do celular. Ela é boa para palavras e frases, mas às vezes
-erra sílabas soltas. Por isso o professor pode **gravar a própria voz uma vez** e
-**passar o pacote de áudios** para os celulares dos estudantes.
-
-### Entrar no modo professor
-
-1. Na tela inicial, toque na **engrenagem ⚙** (canto de cima).
-2. Na primeira vez, **crie um PIN de 4 números** (anote em lugar seguro).
-   Nas outras vezes, digite o PIN.
-
-### Gravar
-
-1. Toque em **GRAVAÇÕES E PRONÚNCIA**.
-2. Escolha a **AULA** (e, se quiser, só **SÍLABAS E LETRAS**, **PALAVRAS** ou **FRASES**).
-   A primeira opção da lista traz as **instruções e frases do app** ("Escute e toque a letra.", "Muito bem"...).
-3. Em cada item:
-   - **OUVIR**: ouve a voz que o estudante vai ouvir agora.
-   - **GRAVAR** → fale → **PARAR** (botão vermelho, com ponto piscando e contador; para
-     sozinho em 15 segundos): grava a sua voz. O app guarda e toca a gravação uma vez;
-     **OUVIR DE NOVO** toca outra vez.
-   - **GRAVAR DE NOVO**: grava outra vez. **APAGAR**: volta para a voz do celular.
-   - **EDITAR FALA**: muda só o texto que a voz do celular lê (a tela continua igual).
-     Exemplo: a tela mostra **PE** e a voz lê *"pé"*; dá para trocar por *"pê"*.
-4. A etiqueta de cada item mostra de onde vem a voz: **SUA GRAVAÇÃO**, **DO PACOTE** ou **VOZ DO APARELHO**.
-
-Dica: grave num lugar quieto, com o celular a um palmo da boca, falando devagar e claro.
-
-### Passar para os celulares dos estudantes
-
-1. No seu celular: modo professor → **PACOTE DE ÁUDIOS** → **EXPORTAR GRAVAÇÕES (.ZIP)**.
-   O arquivo `caderno-pratica-audios-AAAA-MM-DD.zip` vai para a pasta **Downloads**.
-2. Mande o arquivo para o celular do estudante (WhatsApp, Bluetooth ou cabo).
-3. No celular do estudante: modo professor → **PACOTE DE ÁUDIOS** → **IMPORTAR PACOTE (.ZIP)**
-   e escolha o arquivo.
-4. Pronto. O pacote novo substitui o anterior. As correções de fala também vão no pacote.
-
-A ordem das vozes é: **gravação feita no próprio celular** → **pacote importado** → **voz do celular**.
-
-### Configurações (só no modo professor)
-
-- **Tamanho do texto:** normal, grande ou muito grande.
-- **Velocidade da voz do aparelho:** de 0,9 a 1,2; o padrão é **1,0** (ritmo normal).
-  As gravações sempre tocam na velocidade em que foram gravadas.
-- **Mostrar atividades de números e dinheiro:** ligada por padrão. Desligada, some tudo
-  de números, contas, dinheiro e horas (e as aulas que só têm isso).
-- **Vogal E e vogal O nas sílabas:** aberta (*pé, pó*) ou fechada (*pê, pô*).
-- **Voz do aparelho:** automática (a melhor em português do Brasil) ou outra.
-- **Atividades por sessão:** de 8 a 12 (padrão 10).
-- **Animações:** ligar ou desligar.
-- **Mostrar as demonstrações de novo.**
-- **Progresso do estudante → Apagar o progresso:** para começar de novo ou passar o celular a outro estudante.
-- **Trocar o PIN.**
+**Ouça e fale** (letras, sílabas e palavras): o app fala o modelo; a tela mostra
+**AGORA FALE VOCÊ** por cerca de 3 segundos (um aviso calmo, sem números); o app fala o
+modelo de novo, para o estudante comparar de ouvido. Depois: **OUVIR DE NOVO** e **SEGUIR**.
+Nada é gravado.
 
 ---
 
-## 4. Como atualizar o conteúdo (trocar o `conteudo_licoes.json`)
+## 3. Privacidade: o que o app não faz
+
+| O app… | Como é garantido |
+|---|---|
+| não tem conta, login, cadastro nem modo professor | não há essas telas no código |
+| não guarda progresso, histórico nem configuração | o código não usa `localStorage`, `sessionStorage`, IndexedDB nem cookies (teste `tests/hospedagem.test.ts`) |
+| nunca pede o microfone | o código não usa `getUserMedia` nem `MediaRecorder`; na Cloudflare, o cabeçalho `Permissions-Policy: microphone=()` bloqueia o microfone |
+| não fala com outros sites | a política de segurança (CSP) só libera o próprio site |
+| não deixa dado para trás | ao abrir, apaga o que sobrou de versões antigas do app (progresso, PIN, gravações), só as chaves deste app |
+
+O teste de ponta a ponta `e2e/privacidade.spec.ts` percorre a tela inicial, a escolha da
+aula e uma prática inteira e confere, no fim, que `localStorage`, `sessionStorage`,
+IndexedDB e cookies estão **vazios** e que o app **nunca pediu o microfone**.
+
+---
+
+## 4. Áudios de letras e sílabas
+
+A voz do celular lê bem palavras e frases, mas lê mal **letras e sílabas soltas**
+(LHA, NHO, QUE, GUE, PE...) e muda de um celular para outro. Por isso o app aceita
+**áudios prontos**, iguais em todos os celulares:
+
+- `public/audio/letras/NOME.mp3` — a letra dita **pelo nome** (P → *pê*);
+- `public/audio/silabas/NOME.mp3` — a sílaba (PA → *pá*, com a vogal aberta).
+
+**Ordem de uso no app:**
+
+- letras e sílabas: o **áudio pronto**; se faltar algum (ou se ele falhar), a **voz do celular**;
+- palavras, frases, números e instruções: sempre a **voz do celular**.
+
+Os áudios entram no cache do app (funcionam **sem internet**). A lista dos que existem
+(`audio/lista.json`) é montada **sozinha** na publicação: basta pôr o arquivo na pasta.
+
+### De onde vêm os áudios (voz e licença)
+
+**Ainda não há áudios na pasta: ficou a lista para gravar.** A ideia era gerar os 300
+áudios (37 letras e 263 sílabas) uma vez, com uma voz neural em português do Brasil que
+rode sem internet (como o Piper). Mas o ambiente em que este trabalho foi feito **não
+consegue baixar as vozes**: a rede bloqueia o Hugging Face e o GitHub Releases, que é de
+onde vêm os modelos de voz, e nenhum pacote do npm ou do PyPI traz uma voz pt-BR dentro.
+Sem poder baixar a voz, também não foi possível **conferir a licença** dela.
+
+Por isso, como pedido, **não foi usada nenhuma voz robótica**. Ficou pronto:
+
+- a estrutura do app (pastas, lista automática, cache, ordem de uso, testes);
+- o arquivo [`AUDIOS_PARA_GRAVAR.md`](AUDIOS_PARA_GRAVAR.md), com **todas as letras e
+  sílabas**, o nome de arquivo de cada uma, como falar cada uma e o passo a passo para
+  gravar no computador com o **Audacity** (gratuito) e pôr os arquivos na pasta;
+- enquanto isso, o app funciona normalmente com a voz do celular.
+
+Se no futuro os áudios forem gerados com uma voz sintética, registre aqui o nome da voz e
+a licença (só use uma voz cuja licença permita uso e distribuição gratuitos, e nunca um
+serviço online cujos termos proíbam esse uso). Gravações humanas feitas pela equipe não
+têm esse problema.
+
+### Como trocar um áudio (por exemplo, por uma gravação humana)
+
+Basta **substituir o arquivo na pasta** por outro com **o mesmo nome**:
+
+1. Grave e salve em **MP3 mono, de 48 a 64 kbps**, com o silêncio do começo e do fim
+   cortado e o volume igualado (o passo a passo com o Audacity está em
+   [`AUDIOS_PARA_GRAVAR.md`](AUDIOS_PARA_GRAVAR.md)).
+2. No GitHub, abra `public/audio/silabas` (ou `public/audio/letras`), clique em
+   **Add file → Upload files**, envie o arquivo e clique em **Commit changes**.
+3. A publicação é automática; nos celulares aparece **NOVA VERSÃO DISPONÍVEL → ATUALIZAR**.
+
+### Regra dos nomes de arquivo
+
+- Tudo em **minúsculas** e **sem acento**: PA → `pa.mp3`, LHA → `lha.mp3`, QUE → `que.mp3`.
+- Cada acento vira uma palavra no fim, depois de um tracinho, na ordem em que aparece:
+  **agudo** (´), **circunflexo** (^), **til** (~), **crase** (\`), **cedilha** (ç).
+  Exemplos: PÉ → `pe-agudo.mp3` · VÔ → `vo-circunflexo.mp3` · PÃO → `pao-til.mp3` ·
+  ÇA → `ca-cedilha.mp3` · Ç (letra) → `c-cedilha.mp3`.
+- Um arquivo com nome fora da regra é ignorado (a publicação avisa e a voz do celular continua).
+
+### Para quem cuida do código
+
+- `npm run audios:lista` — refaz o `AUDIOS_PARA_GRAVAR.md` (rode depois de pôr áudios na
+  pasta ou de trocar o `conteudo_licoes.json`).
+- `npm run audios:preparar -- PASTA` — converte gravações em qualquer formato (WAV, M4A...)
+  que estejam em `PASTA/letras` e `PASTA/silabas`: corta o silêncio, iguala o volume e salva
+  em MP3 mono de 56 kbps em `public/audio` (precisa do **ffmpeg**).
+- Os testes conferem que **toda letra e sílaba do conteúdo** tem o arquivo ou está na lista
+  para gravar. Se um conteúdo novo trouxer sílabas novas, a publicação para com esse aviso:
+  rode `npm run audios:lista` e envie de novo.
+
+---
+
+## 5. Valores fixos e lista de exclusão
+
+Não há configurações no app. O que antes era configuração do professor agora é um
+**valor fixo** no arquivo comentado **`src/config/padroes.ts`**:
+
+| Valor | Padrão | O que faz |
+|---|---|---|
+| `VELOCIDADE_DA_VOZ` | `1.0` | velocidade da voz do celular (ritmo normal) |
+| `VOGAL_NAS_SILABAS` | `'aberta'` | PE = *pé*, PO = *pó* (ou `'fechada'`: *pê*, *pô*) |
+| `MOSTRAR_NUMEROS_E_DINHEIRO` | `true` | atividades de números e dinheiro nas aulas que as tiverem |
+| `ATIVIDADES_POR_PRATICA` | `10` | atividades em cada prática (de 8 a 12) |
+| `VELOCIDADE_MAIS_DEVAGAR` | `0.8` | velocidade do botão da tartaruga |
+| `PAUSA_PARA_FALAR_MS` | `3000` | quanto tempo o "Ouça e fale" espera o estudante falar |
+
+Para mudar, troque o valor, salve e publique de novo.
+
+As aulas que **não aparecem** no app (caligrafia e coordenação motora) ficam na lista de
+exclusão comentada **`src/config/aulas_excluidas.ts`** (`PARTES_EXCLUIDAS` e `AULAS_EXCLUIDAS`).
+Hoje ela tira a **Parte 1 inteira**. Aulas sem nenhuma atividade de ouvir, ler ou falar
+também somem sozinhas.
+
+---
+
+## 6. Como atualizar o conteúdo (trocar o `conteudo_licoes.json`)
 
 Todo o conteúdo do app (aulas, páginas, sílabas, palavras, frases, contas...) vem do
 arquivo **`conteudo_licoes.json`**, na raiz deste repositório. Nada está fixo no código.
@@ -141,168 +203,98 @@ para com a mensagem *"toda sílaba do conteúdo tem entrada"*). Quem cuida do c�
 
 ### A tabela de pronúncia
 
-Fica em `src/dados/pronuncia.json` e explica a si mesma (campo `_leia_me`):
+Fica em `src/dados/pronuncia.json` e explica a si mesma (campo `_leia_me`). É usada pela
+voz do celular e diz como falar cada letra e sílaba (também na lista de áudios para gravar):
 
 - `silabas`: `"PA": "pá"` → a tela mostra **PA**, a voz lê *pá*. Sílabas com E ou O
-  têm as duas formas: `{"aberta": "pé", "fechada": "pê"}`.
-- `letras`: `"nome"` (lido nas teclas: *pê*) e `"fala"` (lido quando a letra aparece
-  sozinha: *pê, de pai* — nunca o "som" da consoante isolada).
+  têm as duas formas: `{"aberta": "pé", "fechada": "pê"}` (o app usa a aberta).
+- `letras`: `"nome"` (lido nas teclas e no "Ouça e fale": *pê*) e `"fala"` (lido pela voz do
+  celular quando a letra aparece sozinha: *pê, de pai*). O áudio pronto da letra é só o nome.
 - `palavras`: siglas e palavras que a voz lê mal (`"IFCE": "í éfe cê é"`).
-
-As correções feitas no modo professor (**EDITAR FALA**) valem por cima da tabela.
 
 ---
 
-## 5. Para quem cuida do código
+## 7. Para quem cuida do código
 
-Pilha: **Vite + TypeScript** (sem framework), PWA com `vite-plugin-pwa`, `.zip` com `fflate`,
-conta Google com **Firebase** (Auth + Firestore, SDK modular, carregado à parte).
-O código está comentado em português.
+Pilha: **Vite + TypeScript** (sem framework e **sem nenhuma dependência** no app publicado),
+PWA com `vite-plugin-pwa`. O código está comentado em português.
 
 ```bash
-npm install          # instala as dependências
-npm run dev          # abre o app em modo de desenvolvimento (http://localhost:5173)
-npm test             # testes Vitest (progressão, exclusões, atividades, voz, conta, Cloudflare...)
-npm run test:e2e     # testes Playwright (aula 23 sem internet, navegação, voz, gravação, professor)
-npm run test:e2e:firebase  # testes da conta Google com os emuladores do Firebase (precisa de Java 11+)
-npm run build        # gera o site na pasta dist/
-npm run pronuncia    # completa a tabela de pronúncia com sílabas novas do conteúdo
-npm run relatorio    # lista o que do conteúdo não aparece por causa da regra de progressão
-npm run icones       # gera de novo os ícones PNG
+npm install            # instala as ferramentas
+npm run dev            # abre o app em modo de desenvolvimento (http://localhost:5173)
+npm test               # Vitest: progressão, exclusões, atividades, voz, áudios, hospedagem
+npm run test:e2e       # Playwright: sem internet, privacidade, navegação, voz, áudios...
+npm run build          # gera o site na pasta dist/
+npm run audios:lista   # refaz o AUDIOS_PARA_GRAVAR.md
+npm run audios:preparar -- PASTA   # converte gravações para public/audio (precisa do ffmpeg)
+npm run pronuncia      # completa a tabela de pronúncia com sílabas novas do conteúdo
+npm run relatorio      # lista o que do conteúdo não aparece por causa da regra de progressão
+npm run icones         # gera de novo os ícones PNG
 ```
 
 Mapa rápido:
 
 | Pasta / arquivo | O que tem |
 |---|---|
-| `src/config/aulas_excluidas.ts` | **lista de exclusão** (partes e aulas que não aparecem no app) |
+| `src/config/padroes.ts` | **valores fixos** (voz, vogal, números e dinheiro...) |
+| `src/config/aulas_excluidas.ts` | **lista de exclusão** (partes e aulas que não aparecem) |
 | `src/conteudo/progressao.ts` | **validador da regra de progressão** |
 | `src/conteudo/silabas.ts` | divisão silábica |
 | `src/atividades/gerar.ts` | geração das 21 atividades a partir de cada aula |
-| `src/atividades/disponiveis.ts` | quais aulas e atividades aparecem (exclusões, números e dinheiro) |
-| `src/atividades/sessao.ts` | sessão (só esta aula, ou 70% aula + 30% revisão) |
+| `src/atividades/disponiveis.ts` | quais aulas e atividades aparecem |
+| `src/atividades/sessao.ts` | a prática (só esta aula, ou 70% aula + 30% revisão sorteada) |
 | `src/atividades/rotulos.ts` | instruções curtas faladas |
-| `src/dados/progresso.ts` | progresso e repetição espaçada (Leitner) |
-| `src/audio/gravador.ts`, `src/ui/painel-gravacao.ts` | gravação (máquina de estados) e o painel GRAVAR/PARAR/OUVIR DE NOVO |
-| `src/audio/` | voz, pronúncia, gravação, pacote .zip |
-| `src/conta/` | conta Google (Firebase), juntar e sincronizar o progresso |
+| `src/audio/voz.ts` | a voz: áudio pronto (letras e sílabas) ou voz do celular |
+| `src/audio/arquivos.ts` | áudios prontos: regra dos nomes e quando são usados |
 | `src/atividades/telas/` | telas das atividades |
-| `src/telas/` | entrada, início, escolher aula, aula/sessão, progresso, professor |
-| `functions/__/auth`, `cloudflare/` | repasse do login para o Firebase (Cloudflare Pages Functions) |
+| `src/telas/` | escolher a aula (tela inicial) e aula/prática |
+| `src/dados/apagar-antigos.ts` | apaga dados de versões antigas do app |
 | `public/_headers` | cabeçalhos de segurança e cache (Cloudflare) |
-| `firestore.rules`, `firebase.json` | regras do Firestore e configuração dos emuladores |
-| `.env.example` | variáveis do Firebase (copie para `.env`) |
+| `public/audio/` | áudios prontos de letras e sílabas |
 | `.github/workflows/publicar.yml` | publicação no GitHub Pages |
 
 O caminho do site é a variável `BASE_PATH` (padrão `/`, usado na Cloudflare e no computador).
 No GitHub Pages (`/NOME-DO-REPOSITORIO/`) ele é preenchido sozinho pelo workflow.
 
-**Conta Google no computador:** copie `.env.example` para `.env` e preencha com os dados
-do Firebase. Sem o `.env`, o app funciona só com ENTRAR SEM CONTA (sem nenhum erro).
-O passo a passo dos sites do Firebase e da Cloudflare está em
-[`CONFIGURAR_FIREBASE_E_CLOUDFLARE.md`](CONFIGURAR_FIREBASE_E_CLOUDFLARE.md).
-
-**Para tirar uma aula ou parte do app**, edite `src/config/aulas_excluidas.ts`
-(`PARTES_EXCLUIDAS` e `AULAS_EXCLUIDAS`). Aulas excluídas não aparecem na lista, no
-MEU PROGRESSO nem na revisão.
-
 ---
 
-## 6. Decisões tomadas
+## 8. Decisões tomadas
 
-Quando o pedido não definia algo, escolhi o mais simples, acessível e didático.
+Quando o pedido não definia algo, escolhi o mais simples e confiável.
 
-### As seis correções
+### Simplificação (app igual para todos, sem registro de dados)
 
-**1. Só atividades de reconhecimento (ouvir, ler e falar)**
-- A lista de exclusão fica em `src/config/aulas_excluidas.ts`, comentada. Hoje ela tira a
-  **Parte 1 inteira** (Unidade 1 "Meu caderno, meu nome" e Unidade 2 "Preparar a mão":
-  caligrafia, nome, traços), que é feita no caderno.
-- Também somem as aulas que ficam **sem nenhuma atividade de reconhecimento** (veja a seção 7).
-- Saiu o tipo "tutorial" (toque no botão laranja), que não era de ouvir, ler ou falar.
-  Os outros tipos continuam: todos têm ouvir, ler ou falar.
-- Tipos novos: **"Escute e toque a letra certa"** (2 a 4 letras; as erradas são as mais
-  parecidas no som, como A/E, E/I, O/U, P/B, T/D, F/V, M/N) e **"Veja a letra e diga o nome
-  dela"** (letra grande, voz do modelo e GRAVAR para o estudante; o nome é o da tabela de
-  pronúncia: *pê*, *efe*...).
-- Nas aulas das vogais (Unidades 3 e 4) e nas aulas "Aprenda" de cada consoante, a sessão
-  **sempre** começa com: escute e toque a letra, escute e toque a sílaba, e diga o nome da letra.
-  Nas vogais, as "sílabas" são as próprias vogais e os encontros do caderno (AI, EU, OI...).
-- Chave **MOSTRAR ATIVIDADES DE NÚMEROS E DINHEIRO** (modo professor → configurações),
-  ligada por padrão. Desligada, saem: conte, faça a conta, pague, troco, o dinheiro dá?,
-  que horas são, e os itens só de números ("escute e toque o número", ligar preços...).
-  Aulas que só têm isso também somem.
-
-**2. Voz em ritmo natural**
-- Voz do aparelho a **1,0** (antes 0,85). No modo professor, de **0,9 a 1,2**, com 1,0 no meio.
-  Quem tinha 0,85 salvo passa para 1,0.
-- Gravações (do professor, do pacote ou do estudante) tocam **sempre na velocidade original**.
-- No máximo **250 ms** entre uma fala e outra na mesma tela. Depois do "Muito bem!" (ou
-  da resposta mostrada), a próxima atividade começa sozinha, sem tocar em nada.
-- Instruções curtas: *"Escute e toque a letra."*, *"Qual é a sílaba?"*, *"Forme a palavra."*,
-  *"Complete a palavra."*, *"Quantas sílabas?"*... (lista em `src/atividades/rotulos.ts`).
-- Duas ou mais atividades seguidas do mesmo tipo: a instrução é dita só na primeira; nas
-  outras, só o som ou a palavra novos. A instrução volta quando o tipo muda ou quando o
-  estudante toca no alto-falante 🔊.
-
-**3. Bolinhas que navegam**
-- Cada bolinha é um botão de **44 × 44 px** com o rótulo "Atividade 3 de 10" (e ", feita").
-  A atual é maior; as respondidas têm ✓.
-- **◀ VOLTAR** e **AVANÇAR ▶** grandes, que falam "Voltar." e "Avançar." ao serem tocados.
-- Voltar a uma atividade respondida mostra a resposta dada (*"✓ VOCÊ JÁ FEZ ESTA ATIVIDADE: PA."*,
-  ou a resposta certa destacada) e o botão **FAZER DE NOVO**. As de só ouvir e ler apenas abrem de novo.
-- Pular não é erro. Só a resposta dada entra no progresso e na repetição espaçada.
-  Refazer conta como uma resposta nova (a repetição espaçada usa a mais recente).
-- **TERMINAR** a qualquer momento. A tela final diz só *"VOCÊ PRATICOU N ATIVIDADES."*
-  (ou *"ATÉ A PRÓXIMA."* se nada foi feito) — nunca quantas faltaram.
-
-**4. Qualquer aula abre**
-- Nenhuma aula depende de outra. A regra de progressão só filtra o que cada aula mostra.
-- Na abertura da aula: **SÓ ESTA AULA** (padrão, botão laranja) e **ESTA AULA + REVISÃO**
-  (70% desta aula, 30% de revisão das anteriores).
-
-**5. Gravação confiável**
-- Estados: parado → pedindo permissão → gravando → processando → pronto (ou erro).
-- Formato: o primeiro que o navegador aceitar entre `audio/webm;codecs=opus`, `audio/webm`
-  e `audio/mp4` (iPhone). O arquivo só é montado quando a gravação para; depois, o
-  microfone é desligado (some o aviso de microfone do celular).
-- Ao parar: guarda no aparelho (IndexedDB), toca uma vez sozinha e deixa **OUVIR DE NOVO**.
-  A gravação do estudante fica guardada por item (some ao apagar o progresso).
-- Gravando: botão vermelho **PARAR**, ponto vermelho piscando, contador de segundos,
-  limite de **15 segundos** (para sozinho).
-- Sem microfone ou permissão negada: o app diz e escreve *"Para gravar, permita o uso do
-  microfone."* e mostra **TENTAR DE NOVO**. A atividade nunca trava (dá para avançar).
-
-**6. Conta Google e Cloudflare**
-- Tela de entrada (só quando o Firebase está configurado): **ENTRAR COM GOOGLE** (com o
-  "G" do Google e uma frase falada) e **ENTRAR SEM CONTA**. A escolha fica guardada.
-- Sem conta: tudo só no celular. Na tela inicial, o botão ENTRAR COM GOOGLE continua lá:
-  o progresso do celular vai junto para a conta. **SAIR DA CONTA** volta para sem conta
-  (o progresso continua no celular).
-- Login: janela do Google (`signInWithPopup`); se ela for bloqueada, ou no app instalado
-  (tela cheia, onde a janela costuma falhar, principalmente no iPhone), vai para a página
-  do Google (`signInWithRedirect`) e volta sozinho. A sessão fica guardada no aparelho e
-  vale sem internet.
-- O `authDomain` é o **endereço do próprio app**; uma Pages Function
-  (`functions/__/auth/[[caminho]].js`) repassa `/__/auth/*` e `/__/firebase/*` para
-  `SEU-PROJETO.firebaseapp.com`. Assim o login funciona no Safari e no Chrome, que bloqueiam
-  dados de outros sites.
-- Progresso no Firestore em `users/{uid}` (campos `progresso`, `atualizadoEm`, `versao`).
-  O Firestore guarda uma cópia no aparelho: sem internet, tudo funciona e as mudanças vão
-  quando a conexão volta. As regras (`firestore.rules`) só deixam cada pessoa ler e gravar
-  o próprio documento.
-- **Juntar** o progresso do celular com o da conta: nada se perde. Aulas e itens dos dois
-  lados ficam; o mesmo item nos dois lados fica com o mais praticado; o número de sessões é
-  o maior; a última aula vem do lado mais recente.
-- Gravações de voz, PIN e configurações **não** vão para a conta (sem Firebase Storage).
-- Os dados do Firebase vêm só de variáveis de ambiente (`VITE_FIREBASE_*`, veja `.env.example`).
-  Sem elas, o app não carrega o Firebase e funciona só com ENTRAR SEM CONTA. O código do
-  Firebase (cerca de 180 KB comprimido) fica num arquivo à parte, baixado só quando configurado.
-- Cloudflare Pages: build `npm run build`, saída `dist`, caminho `/` (variável `BASE_PATH`).
-  `public/_headers` traz os cabeçalhos de segurança (CSP, HSTS, `Permissions-Policy` com o
-  microfone só para o app, COOP que permite a janela do Google) e o cache do PWA (o service
-  worker e a página sempre conferidos; arquivos com impressão digital guardados por 1 ano).
-  O GitHub Pages continua funcionando como antes (sem conta Google).
+- **A tela inicial é a própria escolha da aula** (título ESCOLHER A AULA em letras grandes,
+  alto-falante e tartaruga, busca pelo número e as Partes). Assim o estudante chega à aula
+  com um toque a menos. Endereços antigos (`#/progresso`, `#/professor`, `#/escolher`) levam
+  para ela.
+- **Dados de versões antigas são apagados ao abrir** (progresso, PIN, configurações e
+  gravações), para não ficar registro de ninguém. Só as chaves `caderno-pratica:` e o banco
+  `caderno-pratica` são apagados: no GitHub Pages, outros sites do mesmo endereço podem usar
+  o mesmo armazenamento.
+- **Demonstração:** aparece na primeira vez de cada tipo de atividade desde que o app foi
+  aberto (fica só na memória). Se o estudante tocar **PULAR** antes de a instrução ser dita,
+  a instrução é dita em seguida.
+- **Valores que eram configuração** (tamanho do texto, voz escolhida, animações) ficaram
+  fixos: texto normal (com letras grandes nas telas principais), a melhor voz pt-BR do
+  celular, e animações que seguem o "reduzir movimento" do próprio celular.
+- **Erros que voltam no fim:** voltam uma vez, iguais (mesmas opções), com o selo **DE NOVO**.
+  Errar de novo na volta não faz voltar outra vez. Errar um par no "Ligue" também conta.
+- **Revisão (ESTA AULA + REVISÃO):** cerca de 30% da prática é sorteada das 15 aulas
+  anteriores mais próximas que têm atividades, sem memória de erros.
+- **Ouça e fale:** existe para as letras (ditas pelo nome), as sílabas e até 4 palavras
+  simples de cada aula; no máximo 2 por prática (nas aulas do começo, com pouco conteúdo,
+  pode haver mais); nas aulas das vogais e "Aprenda", o da letra vem primeiro. **OUVIR DE
+  NOVO** repete a volta inteira (ouça, fale você, ouça de novo). O aviso AGORA FALE VOCÊ é
+  só visual (um balão de fala que "respira", sem números), como pedido.
+- **Mais devagar (tartaruga):** ao lado de todo alto-falante (instrução da tela, OUVIR DE
+  NOVO das atividades). Toca a mesma fala uma vez a 0,8: na voz do celular muda a velocidade
+  da fala; no áudio pronto, a velocidade do arquivo (o tom da voz é mantido).
+- **Áudio pronto tocado da memória:** cada arquivo é lido inteiro (do cache, sem internet) e
+  tocado da memória, porque o iPhone não toca áudio "aos pedaços" direto do cache do app.
+  Nada disso é guardado.
+- **Letra no áudio pronto = só o nome** ("pê"); a voz do celular, sem o arquivo, continua
+  dizendo o nome com um exemplo ("pê, de pai") quando a letra aparece sozinha.
 
 ### Decisões anteriores (continuam valendo)
 
@@ -325,10 +317,10 @@ Quando o pedido não definia algo, escolhi o mais simples, acessível e didátic
 - Os pares do "Ligue" são descobertos sozinhos (iguais; maiúscula ↔ minúscula; palavra ↔ "LU + PA";
   número ↔ preço). Os 21 itens "ligar" do caderno foram todos ligados certo.
 - **Aulas sem atividade de reconhecimento** (e as da lista de exclusão) **não aparecem**
-  na lista, no MEU PROGRESSO nem na revisão. Se alguém abrir uma delas pelo número, o app
+  na lista nem na revisão. Se alguém abrir uma delas pelo número, o app
   diz: *"Esta aula é feita só no caderno, com o professor. Escolha outra aula para praticar."*
 - Aulas com pouco conteúdo no começo do caderno (aulas 8 a 10, só vogais) repetem as
-  atividades de responder para completar a sessão (as de só ouvir e ler não se repetem).
+  atividades de responder para completar a prática (as de só ouvir, ler e falar não se repetem).
 
 **Atividades**
 - Nas atividades de **escolher** (escute e toque, complete...), as opções **não falam** ao
@@ -347,35 +339,31 @@ Quando o pedido não definia algo, escolhi o mais simples, acessível e didátic
   **outro produto da mesma aula** como dinheiro na mão (valores do próprio conteúdo).
 - "Conte": acima de 20, as dezenas aparecem em "pacotes de 10".
 - Demonstração animada (uma mão que toca na resposta) na **primeira vez** de cada tipo
-  de atividade, com a faixa **VEJA COMO SE FAZ** (expressão do caderno) e botão **PULAR**.
+  de atividade **desde que o app foi aberto**, com a faixa **VEJA COMO SE FAZ** (expressão
+  do caderno) e botão **PULAR**. Como nada é guardado, ela volta quando o app é aberto de novo.
 
 **Voz**
-- Vogal **aberta** (pé, pó) é o padrão nas sílabas, mais próxima da fala do Ceará; o professor pode trocar.
+- Vogal **aberta** (pé, pó) nas sílabas, mais próxima da fala do Ceará (`src/config/padroes.ts`).
 - O texto mandado para a voz vai sempre em minúsculas (a voz às vezes soletra palavras em MAIÚSCULAS).
-
-**Repetição espaçada (Leitner, por item)**
-- Cada item tem uma caixa de 1 a 5. Acertou de primeira → sobe uma caixa; errou → caixa 1.
-  Caixa 1 volta na próxima sessão; 2 → em 2 sessões; 3 → 4; 4 → 8; 5 → 16.
-- A revisão (cerca de 30% da sessão) pega primeiro os itens vencidos (os errados antes)
-  e completa com itens das aulas anteriores mais próximas.
+- Instruções curtas ("Escute e toque a letra.", "Qual é a sílaba?", "Forme a palavra.");
+  a instrução não se repete em atividades seguidas do mesmo tipo; no máximo 250 ms entre falas.
 
 **Outros**
-- "Restaurar o progresso do estudante" = **apagar o progresso** (começar do zero), com confirmação.
-- PIN guardado como resumo criptográfico (SHA-256), só no aparelho (nunca vai para a conta Google).
 - Os endereços usam `#` (ex.: `#/aula/23`), que funcionam no GitHub Pages e sem internet.
 
 ---
 
-## 7. O que falta no conteúdo (conferência do `conteudo_licoes.json`)
+## 9. O que falta no conteúdo (conferência do `conteudo_licoes.json`)
 
-O `conteudo_licoes.json` **não foi alterado** nestas correções (ele será substituído).
+O `conteudo_licoes.json` **não foi alterado** (ele será substituído no futuro).
 Li o arquivo inteiro e conferi se tudo o que o app precisa tem de onde sair:
 
 - **Aulas que não aparecem no app:**
   - aulas 1 a 6 (Parte 1, pela lista de exclusão);
   - sem atividade de reconhecimento: 7, 12, 20, 35, 55, 57, 58, 82, 136, 145, 150.
-  - Com a chave de números e dinheiro **desligada**, somem também: 17, 32, 46, 47, 53, 54,
-    67, 68, 81, 88, 97, 106, 117, 126, 140, 144 (só têm números, contas, dinheiro ou horas).
+  - Se `MOSTRAR_NUMEROS_E_DINHEIRO` for `false` (em `src/config/padroes.ts`), somem também:
+    17, 32, 46, 47, 53, 54, 67, 68, 81, 88, 97, 106, 117, 126, 140, 144 (só têm números,
+    contas, dinheiro ou horas).
   - A aula 7 traz as vogais **antes** de elas aparecerem em `letras_conhecidas` — pela regra
     de progressão, o app não as mostra nessa aula (as vogais aparecem a partir da aula 8).
   - Aula 82 ("O troco") e aula 145 ("A conta de luz") **não têm contas nem dados**.
@@ -395,90 +383,67 @@ Li o arquivo inteiro e conferi se tudo o que o app precisa tem de onde sair:
 
 ---
 
-## 8. O que falta fazer
+## 10. O que falta fazer
 
 1. **Juntar este trabalho na `main`** (aceitar o *pull request* da branch
    `claude/determined-brown-2nhf40`). O GitHub Pages publica sozinho.
-2. **Para ter o ENTRAR COM GOOGLE:** seguir
-   [`CONFIGURAR_FIREBASE_E_CLOUDFLARE.md`](CONFIGURAR_FIREBASE_E_CLOUDFLARE.md)
-   (criar o projeto no Firebase, ligar o login com Google e o Firestore, publicar as regras,
-   criar o projeto na Cloudflare Pages com as variáveis, autorizar o endereço, restringir a
-   chave e testar).
-3. **Testar no celular** a gravação (roteiro abaixo) e o login.
+2. **Áudios de letras e sílabas:** gravar os que estão em
+   [`AUDIOS_PARA_GRAVAR.md`](AUDIOS_PARA_GRAVAR.md) (pode ser aos poucos) e pôr na pasta.
+3. **(Opcional) Cloudflare Pages:** seguir [`PUBLICAR_NA_CLOUDFLARE.md`](PUBLICAR_NA_CLOUDFLARE.md).
 
-### Roteiro de teste manual da gravação
+### O que testar no celular (Android/Chrome e iPhone/Safari, com o app instalado)
 
-Faça no **Android (Chrome)** e no **iPhone (Safari)**, com o app instalado na tela inicial:
-
-1. Abra a **aula 8** → **SÓ ESTA AULA** → vá até **"Diga o nome da letra."** (use as bolinhas).
-2. Toque **GRAVAR**. Na primeira vez o celular pergunta se pode usar o microfone:
-   toque **Permitir**.
-3. Confira: o botão fica **vermelho** escrito **PARAR**, com um **ponto piscando** e o
-   contador **0:01, 0:02...**
-4. Diga o nome da letra e toque **PARAR**. A sua voz **toca sozinha uma vez**, inteira,
-   sem cortar o começo nem o fim, na velocidade normal.
-5. Toque **OUVIR DE NOVO**: toca outra vez. Toque **MODELO**: ouve a voz do modelo.
-6. Toque **GRAVAR DE NOVO** e **não** toque PARAR: em **15 segundos** a gravação para sozinha e toca.
-7. Saia da aula, volte para a mesma atividade: **OUVIR DE NOVO** ainda toca (ficou guardada).
-8. Confira que o aviso de microfone do celular (o ponto verde/laranja no alto da tela)
-   **some** depois de PARAR.
-9. Nas configurações do navegador, **bloqueie o microfone** para o app e toque GRAVAR:
-   o app diz e mostra *"Para gravar, permita o uso do microfone."* e o botão **TENTAR DE NOVO**;
-   **AVANÇAR** continua funcionando. Libere o microfone de novo e toque TENTAR DE NOVO.
-10. No **modo professor** → GRAVAÇÕES → aula 23: grave uma sílaba, toque **OUVIR**, depois
-    exporte o pacote e importe em outro celular: a gravação toca lá também.
+1. O app abre direto em **ESCOLHER A AULA**, sem pedir conta nem nada.
+2. Abra uma aula pela busca (ex.: **23**) e outra por Parte → Unidade → Aula.
+3. Numa prática: as bolinhas, **VOLTAR**, **AVANÇAR** e **TERMINAR**; erre uma atividade e
+   confira que ela volta no fim com o selo **DE NOVO**.
+4. **Ouça e fale:** o app fala, mostra **AGORA FALE VOCÊ** por uns 3 segundos, fala de novo;
+   depois **OUVIR DE NOVO** e **SEGUIR**. O celular **nunca** pergunta sobre o microfone.
+5. **Tartaruga:** toca a mesma fala mais devagar; o alto-falante seguinte volta ao normal.
+6. **Modo avião:** feche e abra o app pelo ícone; tudo funciona.
+7. Feche o app e abra de novo: ele começa do zero (nada foi guardado).
+8. Depois de pôr áudios de sílabas na pasta: as sílabas soam iguais nos dois celulares,
+   também no modo avião.
 
 ---
 
-## 9. Limitações conhecidas
+## 11. Limitações conhecidas
 
+- **Sem áudios prontos ainda:** até as letras e sílabas serem gravadas, elas são lidas pela
+  voz do celular, que pode soar estranha em sílabas soltas (LHA, NHA, QUE...) e muda de um
+  celular para outro.
 - A qualidade da voz depende do celular. Se o celular não tiver voz em português, o app
-  funciona em silêncio — por isso o pacote de áudios do professor é importante.
+  funciona em silêncio (os áudios prontos, quando existirem, tocam mesmo assim).
   (No Android: Configurações → Idioma → Saída de texto para fala → Google → instalar *Português (Brasil)*.)
-- Sílabas com LH e NH sozinhas (LHA, NHA) costumam soar estranhas na voz sintetizada: vale gravar.
+- O botão da tartaruga depende da voz do celular aceitar a velocidade 0,8; algumas vozes
+  mudam pouco a velocidade.
 - O destaque palavra por palavra (karaokê) usa os avisos da própria voz; quando o celular
   não manda esses avisos, o destaque segue pelo relógio e pode ficar um pouco adiantado ou atrasado.
-- A pausa de no máximo 250 ms entre falas vale para o app; a voz do aparelho pode levar um
-  instante a mais para começar a primeira fala (no Android, às vezes meio segundo).
-- Gravar voz precisa da permissão do microfone. No iPhone, só funciona no Safari (ou no app
-  instalado pelo Safari) com iOS 14.5 ou mais novo.
-- **Testes automáticos no Safari (WebKit) não rodaram:** o ambiente de testes só tem o
-  Chromium. Por isso o roteiro manual acima deve ser feito no iPhone. O formato `audio/mp4`
-  (o do iPhone) é conferido por teste unitário.
-- **Sem conta**, o progresso fica só naquele celular: se o app for desinstalado ou os dados do
-  navegador forem apagados, o progresso e as gravações se perdem (o pacote .zip do professor
-  serve de cópia dos áudios). **Com a conta Google**, o progresso volta ao entrar de novo;
-  as gravações, não.
-- Ao juntar o progresso de dois celulares que praticaram o mesmo item sem internet, fica o
-  registro do celular que praticou mais vezes (a soma exata das duas práticas não é feita).
-- O teste automático do login usa o emulador do Firebase com uma conta simulada: a janela
-  real do Google (que precisa de `apis.google.com`) não é aberta nos testes. A janela, o
-  redirecionamento e a volta para o app instalado devem ser conferidos no passo 8 do
-  `CONFIGURAR_FIREBASE_E_CLOUDFLARE.md`. A troca de janela para redirecionamento é
-  conferida por teste unitário.
-- A tela MEU PROGRESSO confere todas as aulas ao abrir; em celulares muito simples ela pode
-  levar meio segundo na primeira vez (o app adianta esse trabalho quando o celular está parado).
-- O histórico de commits foi organizado por etapa e por correção (Correção 1 a 6).
+- **Nada é lembrado:** ao fechar o app, a prática recomeça do zero (é o combinado). O
+  professor acompanha o progresso no caderno.
+- A demonstração volta a aparecer cada vez que o app é aberto (não há como lembrar sem
+  guardar dados); o botão **PULAR** encerra na hora.
+- Os testes automáticos rodam no Chromium; **o Safari (iPhone) não foi testado
+  automaticamente** neste ambiente. Confira no iPhone o roteiro da seção 10.
+- O histórico de commits foi organizado por etapa, por correção e por parte.
 
 ---
 
-## 10. Testes e notas de qualidade
+## 12. Testes e notas de qualidade
 
 | Verificação | Resultado |
 |---|---|
-| Vitest (10 arquivos, 67 testes) | ✅ todos passam |
-| — validador de progressão em **todas** as atividades de **todas** as aulas e em sessões com revisão | ✅ 0 problemas |
-| — exclusões (Parte 1, aulas sem reconhecimento, fora da revisão), tipos obrigatórios nas vogais e no "Aprenda", chave de números | ✅ |
-| — voz a 1,0 (0,9 a 1,2), instruções curtas, formatos de gravação | ✅ |
-| — juntar progressos, popup → redirect, repasse da Cloudflare, app sem Firebase | ✅ |
-| Playwright (8 testes): aula 23 inteira **sem internet**; bolinhas, VOLTAR/AVANÇAR, refazer e TERMINAR; ritmo da voz (voz de teste que mede pausas e velocidade); acesso livre e SÓ ESTA AULA; gravação com microfone simulado (duração > 0, salva, toca, para em 15 s); microfone negado; professor grava, exporta e outro aparelho importa | ✅ todos passam |
-| Playwright com os emuladores do Firebase (3 testes): ENTRAR SEM CONTA; entrar com Google depois levando o progresso; progresso na nuvem; **sem internet** depois do login e envio quando a conexão volta; outro aparelho com a mesma conta; SAIR DA CONTA; regras do Firestore (outra pessoa e sem login: negado) | ✅ todos passam |
-| Lighthouse 11 (celular): início, escolher, parte, aula 23, professor, tela de entrada (com Firebase) | **PWA 100 · Acessibilidade 100 · Boas práticas 100 · Desempenho 98 a 100** |
-| Lighthouse: MEU PROGRESSO | PWA 100 · Acessibilidade 100 · Boas práticas 100 · Desempenho 83 |
-| axe-core (WCAG 2 A/AA) em 61 telas: entrada, início, escolher, aula indisponível, professor (gravando e gravado), os 21 tipos de atividade (antes e depois de responder), "diga a letra" gravando, resposta dada, fim | ✅ 0 violações |
-| Tamanho do app publicado (sem áudios) | 0,46 MB sem conta Google; 1,07 MB com (limite: 2 MB) |
+| Vitest (9 arquivos, 69 testes) | ✅ todos passam |
+| — validador de progressão em **todas** as atividades de **todas** as aulas e nas práticas com revisão | ✅ 0 problemas |
+| — exclusões, tipos obrigatórios, "Ouça e fale", práticas de 8 a 12, revisão sem memória | ✅ |
+| — áudios: regra dos nomes, quando o arquivo é usado, toda letra e sílaba tem arquivo ou está na lista | ✅ |
+| — hospedagem e privacidade: sem armazenamento, cookies, microfone ou dependências; `_headers` | ✅ |
+| Playwright (12 testes): aula 23 inteira **sem internet**; **privacidade** (armazenamentos e cookies vazios, microfone nunca pedido); bolinhas, VOLTAR/AVANÇAR, refazer e TERMINAR; voz a 1,0 sem pausas longas; acesso livre e SÓ ESTA AULA; áudio pronto no lugar da voz do celular e volta para a voz do celular se o arquivo falhar; "Ouça e fale"; tartaruga a 0,8; erro que volta no fim; tela inicial em letras grandes; demonstração e retorno gentil ao erro | ✅ todos passam |
+| Lighthouse 11 (celular): início, Parte, Unidade, aula 23, aula indisponível | **PWA 100 · Acessibilidade 100 · Boas práticas 100 · Desempenho 100** |
+| axe-core (WCAG 2 A/AA) em 52 telas: início, escolhas, aula indisponível, os 21 tipos de atividade (antes e depois de responder), demonstração, erro, AGORA FALE VOCÊ, resposta dada, DE NOVO, fim | ✅ 0 violações |
+| Tamanho do app publicado | **0,41 MB** sem os áudios; com os 300 áudios, estimativa de **1,3 a 1,9 MB** (cerca de 3 a 5 KB por letra ou sílaba em MP3 de 56 kbps) |
 
-Telas testadas em 360 × 640 (Android pequeno), em retrato, nos três tamanhos de texto.
+Telas testadas em 360 × 640 (Android pequeno), em retrato.
 
 ---
 
