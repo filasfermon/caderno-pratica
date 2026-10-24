@@ -47,15 +47,22 @@ test('bolinhas, voltar, avançar, refazer e terminar', async ({ page }) => {
   expect(await indice(page)).toBe('2');
   expect(await itensNoProgresso(page)).toBe(0);
 
-  // Responder a atividade 3 → ela fica marcada com ✓ e o app segue para a 4
+  // Responder uma atividade que tem resposta (as de só ouvir/falar não mostram resposta dada).
+  // A ordem das atividades é sorteada: procura a primeira, a partir da 3.
+  const SO_OUVIR = ['conheca', 'leia', 'diga_letra'];
+  let k = 2;
+  await bolinhas.nth(k).click();
+  while (SO_OUVIR.includes((await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '')) await bolinhas.nth(++k).click();
+  expect(await indice(page)).toBe(String(k));
+  // Respondida → fica marcada com ✓ e o app segue para a próxima
   await resolverAtividade(page);
-  expect(await indice(page)).toBe('3');
-  await expect(bolinhas.nth(2)).toHaveAttribute('aria-label', `Atividade 3 de ${total}, feita`);
-  await expect(bolinhas.nth(2)).toContainText('✓');
+  expect(await indice(page)).toBe(String(k + 1));
+  await expect(bolinhas.nth(k)).toHaveAttribute('aria-label', `Atividade ${k + 1} de ${total}, feita`);
+  await expect(bolinhas.nth(k)).toContainText('✓');
   expect(await itensNoProgresso(page)).toBe(1);
 
   // Voltar à atividade respondida: mostra a resposta dada e deixa refazer
-  await bolinhas.nth(2).click();
+  await bolinhas.nth(k).click();
   await expect(page.locator('.resposta-dada')).toBeVisible();
   await page.locator('[data-refazer]').click();
   await expect(page.locator('.resposta-dada')).toBeHidden();

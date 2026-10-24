@@ -2,9 +2,9 @@
 
 import './estilo.css';
 import { el } from './util/dom';
-import { definirConteudo, mostrarTela, raiz } from './app';
+import { definirConteudo, mostrarTela, obterConteudo, raiz } from './app';
 import type { Conteudo } from './conteudo/tipos';
-import { aplicarConfigNaTela } from './dados/config';
+import { aplicarConfigNaTela, opcoesDoConteudo } from './dados/config';
 import { carregarCorrecoes } from './audio/pronuncia';
 import { telaInicio } from './telas/inicio';
 import { telaAulasDaUnidade, telaPartes, telaUnidades } from './telas/escolher';
@@ -13,6 +13,7 @@ import { telaProgresso } from './telas/progresso';
 import { telaProfessor, pararGravacaoDoProfessor } from './telas/professor';
 import { registrarServiceWorker } from './pwa';
 import { entradaPendente, iniciarConta, precisaEscolherConta } from './conta/conta';
+import { prepararAulasDisponiveis } from './atividades/disponiveis';
 import { telaEntrada } from './telas/entrada';
 
 function rotear(): void {
@@ -51,6 +52,7 @@ async function iniciar(): Promise<void> {
   rotear();
   // Conta Google (se configurada): termina o login e liga a sincronização, sem travar o app.
   void iniciarConta();
+  prepararAulasDisponiveis(obterConteudo(), opcoesDoConteudo());
 }
 
 registrarServiceWorker();

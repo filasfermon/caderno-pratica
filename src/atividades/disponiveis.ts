@@ -54,3 +54,18 @@ export function tiposObrigatorios(aula: Aula): TipoAtividade[] {
   const aprendaConsoante = tipos.includes('APRENDA') && (aula.letras_novas ?? []).length > 0;
   return dasVogais || aprendaConsoante ? ['escute_letra', 'escute_silaba', 'diga_letra'] : [];
 }
+
+/**
+ * Confere as aulas aos poucos, quando o celular está parado, para as telas
+ * ESCOLHER A AULA e MEU PROGRESSO abrirem sem demora.
+ */
+export function prepararAulasDisponiveis(c: Conteudo, op: OpcoesConteudo = OPCOES_PADRAO): void {
+  if (typeof requestIdleCallback !== 'function') return; // sem esse recurso, confere na hora (como antes)
+  let i = 0;
+  const passo = (prazo: IdleDeadline) => {
+    // Uma aula de cada vez, só enquanto sobra tempo: nunca trava o toque na tela.
+    while (i < c.aulas.length && prazo.timeRemaining() > 8) aulaDisponivel(c, c.aulas[i++], op);
+    if (i < c.aulas.length) requestIdleCallback(passo);
+  };
+  requestIdleCallback(passo);
+}

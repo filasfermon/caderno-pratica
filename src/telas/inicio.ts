@@ -4,7 +4,7 @@ import { el } from '../util/dom';
 import { icones } from '../ui/icones';
 import { anunciar, botaoOuvir, mostrarTela, obterConteudo, textoPaginas } from '../app';
 import { progresso } from '../dados/progresso';
-import { aulasDisponiveis } from '../atividades/disponiveis';
+import { aulaDisponivel } from '../atividades/disponiveis';
 import { opcoesDoConteudo } from '../dados/config';
 import { contaGoogleDisponivel, sairDaConta, usuarioDaConta } from '../conta/conta';
 import { botaoEntrarComGoogle } from './entrada';
@@ -40,9 +40,11 @@ function blocoDaConta(): HTMLElement | null {
 
 export function telaInicio(): void {
   const c = obterConteudo();
-  const lista = aulasDisponiveis(c, opcoesDoConteudo());
+  const op = opcoesDoConteudo();
   const ultima = progresso().ultimaAula;
-  const aula = lista.find((a) => a.aula === ultima) ?? lista[0] ?? c.aulas[0];
+  // Só confere as aulas necessárias (conferir as 150 deixaria a tela inicial lenta).
+  const daUltima = c.aulas.find((a) => a.aula === ultima);
+  const aula = (daUltima && aulaDisponivel(c, daUltima, op) ? daUltima : c.aulas.find((a) => aulaDisponivel(c, a, op))) ?? c.aulas[0];
   const continuar = el(
     'a',
     { class: 'botao principal', href: `#/aula/${aula.aula}`, 'data-continuar': '' },
