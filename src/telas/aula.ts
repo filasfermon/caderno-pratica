@@ -91,6 +91,9 @@ export function telaAula(numero: number): void {
 function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
   const { aula, atividades } = sessao;
   let indice = 0;
+  // Tipo de atividade cuja instrução acabou de ser falada: se o próximo item for do
+  // mesmo tipo, a instrução não é repetida (só o som ou a palavra do novo item).
+  let tipoInstruido: string | null = null;
   const sair = el('a', { class: 'botao-icone contorno', href: `#/escolher/unidade/${aula.unidade}`, 'aria-label': 'Sair da aula' }, icones.fechar(26), el('span', {}, 'SAIR'));
   const bolinhas = el('ol', { class: 'bolinhas', 'aria-label': 'Progresso da sessão' });
   const textoInstrucao = el('p', { id: 'instrucao' });
@@ -138,8 +141,10 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     mensagem.className = 'mensagem-retorno';
     selo.hidden = !at.revisao;
     corpo.dataset.tipo = at.tipo;
+    corpo.dataset.indice = String(indice);
     const instrucao = instrucaoDe(at);
     textoInstrucao.textContent = instrucao;
+    // O alto-falante sempre fala a instrução completa.
     ouvirInstrucao.onclick = () => void falar({ categoria: 'instrucao', texto: instrucao });
     window.scrollTo(0, 0);
 
@@ -147,6 +152,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       await demonstrar(at, area, faixa, sorteio, viva);
       if (!viva()) return;
       marcarTipoVisto(at.tipo);
+      tipoInstruido = at.tipo; // a demonstração já falou a instrução
     }
     executar(at, instrucao);
   };
@@ -160,6 +166,12 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     let teveErro = false;
     let terminado = false;
     let controle: Controle = {};
+    // Depois do retorno (acerto ou resposta mostrada), o próximo item começa logo.
+    const avancar = () => {
+      if (!vale()) return;
+      indice++;
+      void mostrarAtividade();
+    };
     const seguir = () => {
       if (rodape.querySelector('[data-seguir]')) return;
       const b = el('button', { type: 'button', class: 'botao principal', 'data-seguir': '' }, 'SEGUIR', icones.seguir(34));
@@ -191,10 +203,8 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
           await falar({ categoria: 'retorno', texto: frase });
           if (!vale()) return;
           await controle.aoAcertar?.();
-          if (vale()) seguir();
+          avancar();
         })();
-        // O botão SEGUIR aparece logo, para ninguém ficar esperando.
-        setTimeout(() => vale() && !rodape.firstChild && seguir(), 1200);
       },
       errou: () => {
         if (terminado) return;
@@ -217,7 +227,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
             await falar({ categoria: 'retorno', texto: FRASE_RESPOSTA });
             if (!vale()) return;
             await controle.mostrarResposta?.();
-            if (vale()) seguir();
+            avancar();
           })();
         }
       },
@@ -234,8 +244,10 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       },
     };
     controle = montarAtividade(at, ctx);
+    const repetirInstrucao = tipoInstruido !== at.tipo;
+    tipoInstruido = at.tipo;
     void (async () => {
-      const ok = await falarEmSequencia([{ categoria: 'instrucao', texto: instrucao }]);
+      const ok = repetirInstrucao ? await falarEmSequencia([{ categoria: 'instrucao', texto: instrucao }]) : true;
       if (!vale() || terminado) return;
       if (ok) await controle.modelo?.();
       else if (ehSoDeOuvir(at)) await controle.modelo?.();
@@ -305,16 +317,16 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
       const r = alvo.getBoundingClientRect();
       mao.style.left = `${r.left + r.width / 2 - 22}px`;
       mao.style.top = `${r.top + r.height / 2 - 6}px`;
-      await esperar(animacoesLigadas() ? 850 : 250);
+      await esperar(animacoesLigadas() ? 650 : 200);
       mao.classList.add('toque');
       alvo.click();
-      await esperar(220);
+      await esperar(200);
       mao.classList.remove('toque');
-      await esperar(700);
+      await esperar(250);
     }
     if (!continuar()) return;
     corpo.dataset.demo = 'fim';
-    await esperar(500);
+    await esperar(200);
     await falar({ categoria: 'retorno', texto: FRASE_SUA_VEZ });
   } finally {
     bloqueio.remove();

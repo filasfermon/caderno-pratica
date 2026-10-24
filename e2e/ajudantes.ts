@@ -14,6 +14,7 @@ async function clicarSePuder(page: Page, seletor: string): Promise<void> {
 export async function resolverAtividade(page: Page): Promise<string> {
   await esperarFimDaDemonstracao(page);
   const tipo = (await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '';
+  const indice = (await page.getAttribute('[data-sessao]', 'data-indice')) ?? '';
   const resposta = JSON.parse((await page.getAttribute('.area', 'data-resposta')) ?? 'null');
   switch (tipo) {
     case 'conheca':
@@ -49,9 +50,18 @@ export async function resolverAtividade(page: Page): Promise<string> {
       // Escolhas: escute, complete, quantas, conte, troco, dá?, hora, tutorial
       await clicarSePuder(page, '.area [data-certo="sim"]');
   }
-  const seguir = page.locator('[data-seguir]');
-  await expect(seguir).toBeVisible({ timeout: 30_000 });
-  await seguir.click();
+  if (['conheca', 'leia', 'diga_letra'].includes(tipo)) {
+    // Atividades só de ouvir/ler/falar: o estudante decide quando seguir.
+    const seguir = page.locator('[data-seguir]');
+    await expect(seguir).toBeVisible({ timeout: 30_000 });
+    await seguir.click();
+  }
+  // Depois do acerto (ou da resposta mostrada), o próximo item começa sozinho.
+  await page.waitForFunction(
+    (antes) => !!document.querySelector('[data-fim]') || document.querySelector<HTMLElement>('[data-sessao]')?.dataset.indice !== antes,
+    indice,
+    { timeout: 30_000 },
+  );
   return tipo;
 }
 

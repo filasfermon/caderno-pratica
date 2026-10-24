@@ -89,7 +89,7 @@ export function anunciar(texto: string | string[]): void {
   const frases = Array.isArray(texto) ? texto : [texto];
   setTimeout(() => {
     if (minha === numeroDaTela) void falarEmSequencia(frases.map((t) => ({ categoria: 'instrucao' as const, texto: t })));
-  }, 250);
+  }, 150);
 }
 
 /** "PÁGINA 51" ou "PÁGINAS 49–50". */

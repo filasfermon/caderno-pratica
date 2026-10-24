@@ -6,7 +6,7 @@ export type TamanhoTexto = 'normal' | 'grande' | 'muito-grande';
 
 export interface Config {
   tamanhoTexto: TamanhoTexto;
-  /** Velocidade da voz do aparelho (1 = normal). Padrão 0,85. */
+  /** Velocidade da voz do aparelho (1 = normal, ritmo natural). De 0,9 a 1,2. Padrão 1,0. */
   velocidade: number;
   /** Como a voz lê E e O nas sílabas: aberta (é, ó) ou fechada (ê, ô). */
   vogalE: 'aberta' | 'fechada';
@@ -22,7 +22,7 @@ export interface Config {
 
 const PADRAO: Config = {
   tamanhoTexto: 'normal',
-  velocidade: 0.85,
+  velocidade: 1,
   vogalE: 'aberta',
   vogalO: 'aberta',
   animacoes: true,
@@ -31,7 +31,18 @@ const PADRAO: Config = {
   mostrarNumeros: true,
 };
 
-let atual: Config = { ...PADRAO, ...lerLocal<Partial<Config>>('config', {}) };
+export const VELOCIDADE_MINIMA = 0.9;
+export const VELOCIDADE_MAXIMA = 1.2;
+
+/** Completa a configuração salva. A velocidade antiga (0,85) passa para o novo padrão 1,0. */
+export function normalizarConfig(salva: Partial<Config>): Config {
+  const c = { ...PADRAO, ...salva };
+  if (salva.velocidade === 0.85) c.velocidade = PADRAO.velocidade;
+  c.velocidade = Math.min(VELOCIDADE_MAXIMA, Math.max(VELOCIDADE_MINIMA, Number(c.velocidade) || PADRAO.velocidade));
+  return c;
+}
+
+let atual: Config = normalizarConfig(lerLocal<Partial<Config>>('config', {}));
 
 export function config(): Config {
   return atual;

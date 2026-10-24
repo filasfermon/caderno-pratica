@@ -8,7 +8,7 @@ import { el } from '../util/dom';
 import { icones } from '../ui/icones';
 import { irPara, mostrarTela, obterConteudo, topo } from '../app';
 import { lerLocal, gravarLocal } from '../dados/local';
-import { config, mudarConfig, opcoesDoConteudo, type TamanhoTexto } from '../dados/config';
+import { config, mudarConfig, opcoesDoConteudo, VELOCIDADE_MAXIMA, VELOCIDADE_MINIMA, type TamanhoTexto } from '../dados/config';
 import { aulasDisponiveis } from '../atividades/disponiveis';
 import { esquecerDemonstracoes, progresso, zerarProgresso } from '../dados/progresso';
 import { apagar, esvaziar, guardar, listarChaves, type Audio, type Fala } from '../dados/banco';
@@ -341,14 +341,24 @@ function grupoDeEscolha<T extends string>(titulo: string, nome: string, opcoes: 
 function telaConfiguracoes(): void {
   const c = config();
   const exemplo = () => void falar({ categoria: 'silaba', texto: 'PE' }).then(() => falar({ categoria: 'silaba', texto: 'PO' }));
-  const velocidade = el('input', { type: 'range', id: 'velocidade', min: 0.6, max: 1.2, step: 0.05, value: c.velocidade }) as HTMLInputElement;
+  // Ritmo natural: de 0,9 (um pouco mais devagar) a 1,2 (um pouco mais rápido); 1,0 é o normal.
+  const velocidade = el('input', {
+    type: 'range',
+    id: 'velocidade',
+    min: VELOCIDADE_MINIMA,
+    max: VELOCIDADE_MAXIMA,
+    step: 0.05,
+    value: c.velocidade,
+    list: 'marcas-velocidade',
+  }) as HTMLInputElement;
+  const marcas = el('datalist', { id: 'marcas-velocidade' }, el('option', { value: 0.9 }), el('option', { value: 1 }), el('option', { value: 1.2 }));
   const valorVelocidade = el('output', { for: 'velocidade' }, c.velocidade.toFixed(2).replace('.', ','));
   velocidade.addEventListener('input', () => {
     valorVelocidade.textContent = Number(velocidade.value).toFixed(2).replace('.', ',');
   });
   velocidade.addEventListener('change', () => {
     mudarConfig({ velocidade: Number(velocidade.value) });
-    void falar({ categoria: 'instrucao', texto: 'Escute e toque a sílaba certa.' });
+    void falar({ categoria: 'instrucao', texto: 'Qual é a sílaba?' });
   });
   const vozes = el('select', { id: 'voz' }) as HTMLSelectElement;
   vozes.append(el('option', { value: '' }, 'AUTOMÁTICA (A MELHOR EM PORTUGUÊS)'));
@@ -356,7 +366,7 @@ function telaConfiguracoes(): void {
   vozes.value = c.voz;
   vozes.addEventListener('change', () => {
     mudarConfig({ voz: vozes.value });
-    void falar({ categoria: 'instrucao', texto: 'Escute e toque a sílaba certa.' });
+    void falar({ categoria: 'instrucao', texto: 'Qual é a sílaba?' });
   });
   const animacoes = el('input', { type: 'checkbox', checked: c.animacoes }) as HTMLInputElement;
   animacoes.addEventListener('change', () => mudarConfig({ animacoes: animacoes.checked }));
@@ -378,7 +388,15 @@ function telaConfiguracoes(): void {
       'div',
       { class: 'professor' },
       grupoDeEscolha<TamanhoTexto>('TAMANHO DO TEXTO', 'tamanho', [['normal', 'NORMAL'], ['grande', 'GRANDE'], ['muito-grande', 'MUITO GRANDE']], c.tamanhoTexto, (v) => mudarConfig({ tamanhoTexto: v })),
-      el('label', { class: 'campo', for: 'velocidade' }, el('span', {}, 'VELOCIDADE DA VOZ: ', valorVelocidade, ' (padrão 0,85)'), velocidade),
+      el(
+        'label',
+        { class: 'campo', for: 'velocidade' },
+        el('span', {}, 'VELOCIDADE DA VOZ DO APARELHO: ', valorVelocidade, ' (normal: 1,00)'),
+        velocidade,
+        marcas,
+        el('span', { class: 'fala', style: { display: 'flex', justifyContent: 'space-between' } }, el('span', {}, '0,9 MAIS DEVAGAR'), el('span', {}, '1,2 MAIS RÁPIDO')),
+        el('span', { class: 'fala' }, 'As gravações do professor e do pacote tocam sempre na velocidade original.'),
+      ),
       grupoDeEscolha('VOGAL E NAS SÍLABAS (PE, LE, TE...)', 'vogalE', [['aberta', 'ABERTA (É): pé, lé, té'], ['fechada', 'FECHADA (Ê): pê, lê, tê']], c.vogalE, (v) => {
         mudarConfig({ vogalE: v });
         exemplo();
