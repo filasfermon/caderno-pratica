@@ -70,7 +70,7 @@ describe('regra de progressão em TODAS as atividades geradas', () => {
     const p: Progresso = { sessoes: 0, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [] };
     for (const a of conteudo.aulas) {
       p.sessoes++;
-      const sessao = montarSessao(conteudo, a, p, criarSorteio(a.aula), 10);
+      const sessao = montarSessao(conteudo, a, p, criarSorteio(a.aula), 10, undefined, a.aula % 2 ? 'revisao' : 'aula');
       const k = conhecimentoDaAula(a);
       for (const at of sessao.atividades) {
         for (const t of textosVisiveis(at)) expect(problemasDoTexto(t, k), `aula ${a.aula} · ${at.tipo} · "${t}"`).toEqual([]);

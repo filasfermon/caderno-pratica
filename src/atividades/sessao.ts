@@ -139,27 +139,45 @@ export function escolherRevisao(
   return escolhidas;
 }
 
+/**
+ * Como a sessão é montada:
+ *  - 'aula'    → SÓ ESTA AULA (padrão): todas as atividades vêm da aula escolhida.
+ *  - 'revisao' → ESTA AULA + REVISÃO: cerca de 70% da aula e 30% de revisão de aulas anteriores.
+ */
+export type ModoSessao = 'aula' | 'revisao';
+
+/** Tipos que podem se repetir para completar a sessão (os de só ouvir/ler não se repetem). */
+const NAO_REPETIR: TipoAtividade[] = ['conheca', 'leia', 'diga_letra'];
+
 /** Monta a sessão de uma aula. Aula sem atividades → sessão vazia (a aula nem aparece na lista). */
-export function montarSessao(c: Conteudo, aula: Aula, p: Progresso, s: Sorteio, total = 10, op: OpcoesConteudo = OPCOES_PADRAO): Sessao {
+export function montarSessao(
+  c: Conteudo,
+  aula: Aula,
+  p: Progresso,
+  s: Sorteio,
+  total = 10,
+  op: OpcoesConteudo = OPCOES_PADRAO,
+  modo: ModoSessao = 'aula',
+): Sessao {
   const tamanho = Math.max(8, Math.min(12, total));
   const proprias = atividadesDaAula(c, aula, s, op);
   if (proprias.length === 0) return { aula, atividades: [] };
   const obrigatorios = tiposObrigatorios(aula);
 
-  const querRevisao = Math.round(tamanho * 0.3);
+  const querRevisao = modo === 'revisao' ? Math.round(tamanho * 0.3) : 0;
   let daAula = escolherVariado(proprias, tamanho - querRevisao, p, s, true, obrigatorios);
   const evitar = new Set(daAula.map((a) => a.chave));
-  const revisao = escolherRevisao(c, aula, p, tamanho - daAula.length, s, evitar, op);
+  const revisao = modo === 'revisao' ? escolherRevisao(c, aula, p, tamanho - daAula.length, s, evitar, op) : [];
   // Se faltou revisão (começo do caderno), completa com mais atividades da própria aula.
   if (daAula.length + revisao.length < tamanho) {
     const resto = proprias.filter((a) => !evitar.has(a.chave));
     daAula = [...daAula, ...escolherVariado(resto, tamanho - daAula.length - revisao.length, p, s)];
   }
-  // Aula com pouco conteúdo e sem revisão (começo do caderno): repete atividades da aula.
-  for (let i = 0; daAula.length + revisao.length < tamanho && i < tamanho * 2; i++) {
-    const repetiveis = proprias.filter((a) => a.tipo !== 'conheca');
-    const base = repetiveis.length ? repetiveis : proprias;
-    daAula.push(base[i % base.length]);
+  // Aula com pouco conteúdo: repete atividades de responder (não as de só ouvir e ler).
+  // Se a aula só tiver atividades de ouvir e ler, a sessão fica mais curta.
+  const repetiveis = proprias.filter((a) => !NAO_REPETIR.includes(a.tipo));
+  for (let i = 0; repetiveis.length && daAula.length + revisao.length < tamanho && i < tamanho * 2; i++) {
+    daAula.push(repetiveis[i % repetiveis.length]);
   }
   daAula.sort((a, b) => ESTAGIO[a.tipo] - ESTAGIO[b.tipo]);
 

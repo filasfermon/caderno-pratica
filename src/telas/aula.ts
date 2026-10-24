@@ -10,7 +10,7 @@ import { el, esperar } from '../util/dom';
 import { icones } from '../ui/icones';
 import { anunciar, botaoOuvir, irPara, mostrarTela, obterConteudo, telaAtual, textoPaginas, topo } from '../app';
 import { aulaPorNumero, formatarParaAula } from '../conteudo/consulta';
-import { montarSessao, type Sessao } from '../atividades/sessao';
+import { montarSessao, type ModoSessao, type Sessao } from '../atividades/sessao';
 import type { Atividade } from '../atividades/tipos';
 import { ehSoDeOuvir } from '../atividades/tipos';
 import { montarAtividade } from '../atividades/telas/indice';
@@ -64,12 +64,16 @@ export function telaAula(numero: number): void {
   }
   const sorteio = criarSorteio();
   const objetivo = aula.objetivo ? formatarParaAula(aula.objetivo, aula) : '';
-  const fala = [falaDaAbertura(aula)];
-  const comecar = el('button', { type: 'button', class: 'botao principal', 'data-comecar': '' }, icones.seguir(34), 'COMEÇAR');
-  comecar.addEventListener('click', () => {
+  const fala = [falaDaAbertura(aula), 'Toque em só esta aula para começar.'];
+  // Duas formas de praticar. O padrão é SÓ ESTA AULA: o professor muitas vezes escolhe a aula que vai ensinar.
+  const comecar = (modo: ModoSessao) => {
     iniciarSessao(aula.aula);
-    rodarSessao(montarSessao(c, aula, progresso(), sorteio, config().atividadesPorSessao, opcoesDoConteudo()), sorteio);
-  });
+    rodarSessao(montarSessao(c, aula, progresso(), sorteio, config().atividadesPorSessao, opcoesDoConteudo(), modo), sorteio);
+  };
+  const soEsta = el('button', { type: 'button', class: 'botao principal', 'data-comecar': '' }, icones.seguir(34), 'SÓ ESTA AULA');
+  soEsta.addEventListener('click', () => comecar('aula'));
+  const comRevisao = el('button', { type: 'button', class: 'botao', 'data-comecar-revisao': '' }, icones.seguir(30), 'ESTA AULA + REVISÃO');
+  comRevisao.addEventListener('click', () => comecar('revisao'));
   mostrarTela(
     `Aula ${aula.aula}`,
     topo({ titulo: `AULA ${aula.aula}`, voltar: `#/escolher/unidade/${aula.unidade}` }),
@@ -80,7 +84,7 @@ export function telaAula(numero: number): void {
       el('div', { class: 'paginas' }, icones.livro(30), `CADERNO: ${textoPaginas(aula.paginas)}`),
       objetivo ? el('p', { class: 'objetivo' }, objetivo.toLocaleUpperCase('pt-BR')) : null,
       el('div', { style: { display: 'flex', justifyContent: 'center' } }, botaoOuvir(() => fala)),
-      comecar,
+      el('div', { class: 'pilha' }, soEsta, comRevisao),
     ),
   );
   anunciar(fala);

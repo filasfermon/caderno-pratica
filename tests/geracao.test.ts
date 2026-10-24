@@ -58,7 +58,7 @@ describe('geração das atividades', () => {
 
   it('a escrita (atividade 8) só aparece a partir da Unidade 5', () => {
     for (const a of conteudo.aulas) {
-      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula));
+      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
       if (a.unidade < 5) expect(sessao.atividades.some((x) => x.tipo === 'escreva'), `aula ${a.aula}`).toBe(false);
     }
     for (const x of todas().filter((x) => x.tipo === 'escreva')) expect(aula(x.aula).unidade).toBeGreaterThanOrEqual(5);
@@ -75,7 +75,7 @@ describe('geração das atividades', () => {
     };
     const primeira = Math.min(...conteudo.aulas.filter((a) => temDinheiro(a.aula)).map((a) => a.aula));
     for (const a of conteudo.aulas) {
-      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula));
+      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
       for (const x of sessao.atividades.filter((x) => x.tipo === 'pague' || x.tipo === 'troco')) {
         expect(temDinheiro(x.aula), `atividade da aula ${x.aula}`).toBe(true);
         expect(a.aula).toBeGreaterThanOrEqual(primeira);
@@ -108,9 +108,9 @@ describe('geração das atividades', () => {
 });
 
 describe('sessões', () => {
-  it('toda aula com conteúdo tem sessão de 8 a 12 atividades', () => {
+  it('ESTA AULA + REVISÃO: toda aula com atividades tem sessão de 8 a 12', () => {
     for (const a of conteudo.aulas) {
-      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10);
+      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
       if (s.atividades.length === 0) {
         expect(aulaDisponivel(conteudo, a)).toBe(false);
         continue;
@@ -120,8 +120,23 @@ describe('sessões', () => {
     }
   });
 
-  it('cerca de 70% da aula e 30% de revisão', () => {
-    const s = montarSessao(conteudo, aula(23), vazio(), criarSorteio(5), 10);
+  it('SÓ ESTA AULA (padrão): todas as atividades são da aula, sem revisão; 8 a 12 quando há o que responder', () => {
+    for (const a of conteudo.aulas) {
+      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10);
+      if (!aulaDisponivel(conteudo, a)) continue;
+      expect(s.atividades.length, `aula ${a.aula}`).toBeGreaterThan(0);
+      expect(s.atividades.length, `aula ${a.aula}`).toBeLessThanOrEqual(12);
+      for (const at of s.atividades) {
+        expect(at.revisao, `aula ${a.aula}`).toBeFalsy();
+        expect(at.aula).toBe(a.aula);
+      }
+      const temOQueResponder = s.atividades.some((x) => !['conheca', 'leia', 'diga_letra'].includes(x.tipo));
+      if (temOQueResponder) expect(s.atividades.length, `aula ${a.aula}`).toBeGreaterThanOrEqual(8);
+    }
+  });
+
+  it('cerca de 70% da aula e 30% de revisão no modo ESTA AULA + REVISÃO', () => {
+    const s = montarSessao(conteudo, aula(23), vazio(), criarSorteio(5), 10, undefined, 'revisao');
     expect(s.atividades.filter((a) => a.revisao).length).toBe(3);
     expect(s.atividades.filter((a) => !a.revisao).length).toBe(7);
     for (const r of s.atividades.filter((a) => a.revisao)) expect(r.aula).toBeLessThan(23);
@@ -145,7 +160,7 @@ describe('sessões', () => {
     const devidos = itensParaRevisar(p, 24).map(([c]) => c);
     expect(devidos).toEqual(['escute_palavra|LUPA']);
     // Na sessão da aula 24, o item errado aparece na revisão.
-    const s = montarSessao(conteudo, aula(24), p, criarSorteio(3));
+    const s = montarSessao(conteudo, aula(24), p, criarSorteio(3), 10, undefined, 'revisao');
     expect(s.atividades.some((a) => a.revisao && a.chave === 'escute_palavra|LUPA')).toBe(true);
   });
 });

@@ -30,7 +30,7 @@ describe('lista de exclusão', () => {
   it('aulas excluídas não entram na revisão', () => {
     const p = vazio();
     for (let k = 0; k < 20; k++) {
-      const s = montarSessao(conteudo, aula(9), p, criarSorteio(k));
+      const s = montarSessao(conteudo, aula(9), p, criarSorteio(k), 10, undefined, 'revisao');
       for (const at of s.atividades) expect(aulaNaListaDeExclusao(aula(at.aula))).toBe(false);
       for (const at of s.atividades) registrarItem(p, at.chave, at.aula, false);
       p.sessoes++;
@@ -47,10 +47,11 @@ describe('atividades de reconhecimento obrigatórias', () => {
       const tipos = new Set(atividadesDaAula(conteudo, a, criarSorteio(1)).map((x) => x.tipo));
       for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(tipos, `aula ${a.aula}: ${t}`).toContain(t);
       // ...e os três aparecem de fato na sessão
-      for (let semente = 1; semente <= 3; semente++) {
-        const naSessao = new Set(montarSessao(conteudo, a, vazio(), criarSorteio(semente)).atividades.filter((x) => !x.revisao).map((x) => x.tipo));
-        for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(naSessao, `sessão aula ${a.aula}: ${t}`).toContain(t);
-      }
+      for (const modo of ['aula', 'revisao'] as const)
+        for (let semente = 1; semente <= 3; semente++) {
+          const naSessao = new Set(montarSessao(conteudo, a, vazio(), criarSorteio(semente), 10, undefined, modo).atividades.filter((x) => !x.revisao).map((x) => x.tipo));
+          for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(naSessao, `sessão ${modo} aula ${a.aula}: ${t}`).toContain(t);
+        }
     }
   });
 
@@ -73,7 +74,7 @@ describe('atividades de reconhecimento obrigatórias', () => {
 describe('chave "mostrar atividades de números e dinheiro"', () => {
   it('desligada: nenhuma atividade de números nas sessões', () => {
     for (const a of aulasDisponiveis(conteudo, SEM_NUMEROS)) {
-      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, SEM_NUMEROS);
+      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, SEM_NUMEROS, 'revisao');
       for (const at of s.atividades) {
         expect(TIPOS_DE_NUMEROS, `aula ${a.aula}`).not.toContain(at.tipo);
         expect(ehAtividadeDeNumeros(at), `aula ${a.aula} ${at.tipo}`).toBe(false);
