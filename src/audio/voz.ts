@@ -1,23 +1,14 @@
-// A VOZ DO APP — três camadas, nesta ordem:
-//   (a) gravação do professor feita neste aparelho;
-//   (b) áudio do pacote .zip importado;
-//   (c) voz sintetizada do navegador (Web Speech API), em português do Brasil.
+// A VOZ DO APP: a voz sintetizada do celular (Web Speech API), em português do Brasil.
+// Nada é gravado e nada é guardado no aparelho.
 //
 // Também faz o "karaokê": avisa qual palavra está sendo lida.
 
-import { config } from '../dados/config';
-import { ler, type Audio } from '../dados/banco';
-import { chaveDoItem, textoParaFala, type ItemAudio } from './pronuncia';
-
-export type OrigemAudio = 'professor' | 'pacote' | 'voz';
+import { VELOCIDADE_DA_VOZ } from '../config/padroes';
+import { textoParaFala, type ItemAudio } from './pronuncia';
 
 export interface OpcoesFala {
   /** Chamado com o número da palavra que está sendo lida (0, 1, 2...). */
   aoLerPalavra?: (indice: number) => void;
-  /** Ignora gravações e usa só a voz do aparelho (modo professor: "ouvir a voz do aparelho"). */
-  soVozDoAparelho?: boolean;
-  /** Avisado quando um áudio gravado começa a tocar de verdade. */
-  aoComecar?: () => void;
 }
 
 // ---------- Escolha da melhor voz pt-BR ----------
@@ -53,15 +44,13 @@ function pontuar(v: SpeechSynthesisVoice): number {
   return p;
 }
 
-export function vozesPortugues(): SpeechSynthesisVoice[] {
+function vozesPortugues(): SpeechSynthesisVoice[] {
   carregarVozes();
   return vozes.filter((v) => pontuar(v) >= 0).sort((a, b) => pontuar(b) - pontuar(a));
 }
 
 function vozEscolhida(): SpeechSynthesisVoice | undefined {
-  const lista = vozesPortugues();
-  const nome = config().voz;
-  return lista.find((v) => v.name === nome) ?? lista[0];
+  return vozesPortugues()[0];
 }
 
 // ---------- Tocar ----------
@@ -87,19 +76,6 @@ export function pararFala(): void {
     s.cancel();
     ultimoCancelamento = Date.now();
   }
-}
-
-/** Procura a gravação de um item: primeiro a do professor, depois a do pacote. */
-export async function gravacaoDe(chave: string): Promise<{ audio: Audio; origem: OrigemAudio } | null> {
-  const doProfessor = await ler<Audio>('gravacoes', chave);
-  if (doProfessor) return { audio: doProfessor, origem: 'professor' };
-  const doPacote = await ler<Audio>('pacote', chave);
-  if (doPacote) return { audio: doPacote, origem: 'pacote' };
-  return null;
-}
-
-export async function origemDoAudio(item: ItemAudio): Promise<OrigemAudio> {
-  return (await gravacaoDe(chaveDoItem(item)))?.origem ?? 'voz';
 }
 
 function palavrasDe(texto: string): string[] {
@@ -144,66 +120,9 @@ function novaFala(resolve: () => void, aoParar: () => void = () => undefined) {
   return controle;
 }
 
-// Um só tocador de áudio para o app inteiro. No iPhone (Safari), um áudio só toca
-// depois de um toque na tela; por isso o tocador é "destravado" no primeiro toque.
-const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-let tocador: HTMLAudioElement | null = null;
-let destravado = false;
-
-function obterTocador(): HTMLAudioElement {
-  if (!tocador) {
-    tocador = new Audio();
-    tocador.preload = 'auto';
-  }
-  return tocador;
-}
-
-/** Chame dentro de um toque (ex.: no botão PARAR) para garantir que o áudio seguinte toque. */
-export function destravarAudio(): void {
-  if (typeof Audio === 'undefined') return;
-  const t = obterTocador();
-  if (destravado && t.src) return;
-  destravado = true;
-  t.src = SILENCIO;
-  t.play().catch(() => undefined);
-}
-
-if (typeof document !== 'undefined') {
-  document.addEventListener('pointerdown', () => destravarAudio(), { once: true, capture: true });
-}
-
-function tocarBlob(blob: Blob, texto: string, opcoes: OpcoesFala): Promise<void> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(blob);
-    const audio = obterTocador();
-    audio.pause();
-    audio.playbackRate = 1; // gravações tocam sempre na velocidade original
-    audio.src = url;
-    const fala = novaFala(
-      () => {
-        audio.onended = audio.onerror = audio.onloadedmetadata = null;
-        URL.revokeObjectURL(url);
-        resolve();
-      },
-      () => audio.pause(),
-    );
-    audio.onended = fala.terminar;
-    audio.onerror = fala.terminar;
-    audio.onloadedmetadata = () => {
-      if (opcoes.aoLerPalavra && isFinite(audio.duration)) karaokePorTempo(texto, audio.duration * 1000, opcoes.aoLerPalavra, fala.timers);
-    };
-    // Segurança: se o áudio não avisar o fim, seguimos depois de um tempo.
-    fala.timers.push(window.setTimeout(fala.terminar, 30_000));
-    audio.play().then(
-      () => opcoes.aoComecar?.(),
-      () => fala.terminar(),
-    );
-  });
-}
-
 /** Tempo estimado de leitura (para quando a voz do aparelho não avisa o fim). */
 function duracaoEstimada(texto: string): number {
-  return (texto.length * 85) / Math.max(0.5, config().velocidade) + 400;
+  return (texto.length * 85) / Math.max(0.5, VELOCIDADE_DA_VOZ) + 400;
 }
 
 function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFala): Promise<void> {
@@ -220,7 +139,7 @@ function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFa
     const enunciado = new SpeechSynthesisUtterance(textoFala);
     enunciado.lang = 'pt-BR';
     enunciado.voice = voz;
-    enunciado.rate = config().velocidade;
+    enunciado.rate = VELOCIDADE_DA_VOZ;
     let recebeuLimite = false;
     if (opcoes.aoLerPalavra) {
       // Quando a fala tem as mesmas palavras da tela, usamos os avisos de palavra da própria voz.
@@ -260,14 +179,8 @@ function falarSintetizado(textoTela: string, textoFala: string, opcoes: OpcoesFa
  * A promessa termina quando a fala acaba (ou é interrompida por outra).
  */
 export async function falar(item: ItemAudio, opcoes: OpcoesFala = {}): Promise<void> {
-  const minha = ++geracao;
+  geracao++;
   pararFala();
-  if (!opcoes.soVozDoAparelho) {
-    const gravacao = await gravacaoDe(chaveDoItem(item));
-    if (minha !== geracao) return; // outra fala começou enquanto procurávamos a gravação
-    if (gravacao) return tocarBlob(gravacao.audio.blob, item.texto, opcoes);
-  }
-  if (minha !== geracao) return;
   return falarSintetizado(item.texto, textoParaFala(item), opcoes);
 }
 
@@ -279,11 +192,4 @@ export async function falarEmSequencia(itens: ItemAudio[]): Promise<boolean> {
     if (geracao !== antes + 1) return false; // outra fala começou no meio: paramos aqui
   }
   return true;
-}
-
-/** Toca um áudio qualquer (ex.: a gravação do próprio estudante). */
-export function tocarAudio(blob: Blob, opcoes: OpcoesFala = {}): Promise<void> {
-  geracao++;
-  pararFala();
-  return tocarBlob(blob, '', opcoes);
 }

@@ -4,13 +4,11 @@ import { gerarCandidatas } from '../src/atividades/gerar';
 import { montarSessao } from '../src/atividades/sessao';
 import type { Atividade, TipoAtividade } from '../src/atividades/tipos';
 import { criarSorteio } from '../src/util/aleatorio';
-import { itensParaRevisar, registrarItem, INTERVALOS, type Progresso } from '../src/dados/progresso';
 import { resolverPares } from '../src/conteudo/ligar';
 import { normalizarFrase } from '../src/util/texto';
 import { aula, conteudo } from './apoio';
 import { aulaDisponivel } from '../src/atividades/disponiveis';
 
-const vazio = (): Progresso => ({ sessoes: 1, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [] });
 const todas = (): Atividade[] => conteudo.aulas.flatMap((a) => gerarCandidatas(conteudo, a, criarSorteio(a.aula)));
 
 describe('geração das atividades', () => {
@@ -58,7 +56,7 @@ describe('geração das atividades', () => {
 
   it('a escrita (atividade 8) só aparece a partir da Unidade 5', () => {
     for (const a of conteudo.aulas) {
-      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
+      const sessao = montarSessao(conteudo, a, criarSorteio(a.aula), 10, undefined, 'revisao');
       if (a.unidade < 5) expect(sessao.atividades.some((x) => x.tipo === 'escreva'), `aula ${a.aula}`).toBe(false);
     }
     for (const x of todas().filter((x) => x.tipo === 'escreva')) expect(aula(x.aula).unidade).toBeGreaterThanOrEqual(5);
@@ -75,7 +73,7 @@ describe('geração das atividades', () => {
     };
     const primeira = Math.min(...conteudo.aulas.filter((a) => temDinheiro(a.aula)).map((a) => a.aula));
     for (const a of conteudo.aulas) {
-      const sessao = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
+      const sessao = montarSessao(conteudo, a, criarSorteio(a.aula), 10, undefined, 'revisao');
       for (const x of sessao.atividades.filter((x) => x.tipo === 'pague' || x.tipo === 'troco')) {
         expect(temDinheiro(x.aula), `atividade da aula ${x.aula}`).toBe(true);
         expect(a.aula).toBeGreaterThanOrEqual(primeira);
@@ -110,7 +108,7 @@ describe('geração das atividades', () => {
 describe('sessões', () => {
   it('ESTA AULA + REVISÃO: toda aula com atividades tem sessão de 8 a 12', () => {
     for (const a of conteudo.aulas) {
-      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, undefined, 'revisao');
+      const s = montarSessao(conteudo, a, criarSorteio(a.aula), 10, undefined, 'revisao');
       if (s.atividades.length === 0) {
         expect(aulaDisponivel(conteudo, a)).toBe(false);
         continue;
@@ -122,7 +120,7 @@ describe('sessões', () => {
 
   it('SÓ ESTA AULA (padrão): todas as atividades são da aula, sem revisão; 8 a 12 quando há o que responder', () => {
     for (const a of conteudo.aulas) {
-      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10);
+      const s = montarSessao(conteudo, a, criarSorteio(a.aula), 10);
       if (!aulaDisponivel(conteudo, a)) continue;
       expect(s.atividades.length, `aula ${a.aula}`).toBeGreaterThan(0);
       expect(s.atividades.length, `aula ${a.aula}`).toBeLessThanOrEqual(12);
@@ -136,31 +134,25 @@ describe('sessões', () => {
   });
 
   it('cerca de 70% da aula e 30% de revisão no modo ESTA AULA + REVISÃO', () => {
-    const s = montarSessao(conteudo, aula(23), vazio(), criarSorteio(5), 10, undefined, 'revisao');
+    const s = montarSessao(conteudo, aula(23), criarSorteio(5), 10, undefined, 'revisao');
     expect(s.atividades.filter((a) => a.revisao).length).toBe(3);
     expect(s.atividades.filter((a) => !a.revisao).length).toBe(7);
     for (const r of s.atividades.filter((a) => a.revisao)) expect(r.aula).toBeLessThan(23);
   });
 
   it('aulas sem atividades de reconhecimento não têm sessão (e não aparecem)', () => {
-    const s20 = montarSessao(conteudo, aula(20), vazio(), criarSorteio(1));
+    const s20 = montarSessao(conteudo, aula(20), criarSorteio(1));
     expect(s20.atividades).toEqual([]);
     expect(aulaDisponivel(conteudo, aula(20))).toBe(false);
   });
 
-  it('repetição espaçada: o que foi errado volta mais cedo', () => {
-    const p = vazio();
-    registrarItem(p, 'escute_palavra|LUPA', 23, false); // errou → caixa 1
-    registrarItem(p, 'escute_palavra|PULO', 23, true); // acertou → caixa 2
-    registrarItem(p, 'escute_palavra|PULO', 23, true); // acertou de novo → caixa 3
-    expect(p.itens['escute_palavra|LUPA'].caixa).toBe(1);
-    expect(p.itens['escute_palavra|PULO'].caixa).toBe(3);
-    expect(p.itens['escute_palavra|LUPA'].proxima).toBe(p.sessoes + INTERVALOS[1]);
-    p.sessoes += 1;
-    const devidos = itensParaRevisar(p, 24).map(([c]) => c);
-    expect(devidos).toEqual(['escute_palavra|LUPA']);
-    // Na sessão da aula 24, o item errado aparece na revisão.
-    const s = montarSessao(conteudo, aula(24), p, criarSorteio(3), 10, undefined, 'revisao');
-    expect(s.atividades.some((a) => a.revisao && a.chave === 'escute_palavra|LUPA')).toBe(true);
+  it('a revisão não tem memória: duas práticas iguais podem sortear itens diferentes', () => {
+    const revisoes = new Set<string>();
+    for (let k = 1; k <= 6; k++)
+      for (const r of montarSessao(conteudo, aula(40), criarSorteio(k), 10, undefined, 'revisao').atividades.filter((a) => a.revisao)) {
+        expect(r.aula).toBeLessThan(40);
+        revisoes.add(r.chave);
+      }
+    expect(revisoes.size).toBeGreaterThan(3);
   });
 });

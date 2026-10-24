@@ -1,10 +1,8 @@
-// Correção 4: qualquer aula abre livremente, sem precisar concluir as anteriores.
+// Qualquer aula abre livremente, sem precisar concluir as anteriores.
 import { test, expect } from '@playwright/test';
 
-test('aulas avançadas abrem com o progresso vazio; SÓ ESTA AULA é o padrão', async ({ page }) => {
+test('aulas avançadas abrem direto; SÓ ESTA AULA é o padrão', async ({ page }) => {
   await page.goto('/');
-  await page.evaluate(() => localStorage.clear());
-  await page.goto('/#/escolher');
   // A Parte 1 (caligrafia) não aparece; as outras partes, sim.
   await expect(page.locator('a[href="#/escolher/parte/1"]')).toHaveCount(0);
   for (const parte of [2, 3, 4, 5, 6]) await expect(page.locator(`a[href="#/escolher/parte/${parte}"]`)).toBeVisible();
@@ -28,7 +26,7 @@ test('aulas avançadas abrem com o progresso vazio; SÓ ESTA AULA é o padrão',
   }
 
   // ESTA AULA + REVISÃO também abre, em qualquer aula (busca pelo número)
-  await page.goto('/#/escolher');
+  await page.goto('/');
   await page.locator('#busca-aula').fill('135');
   await page.getByRole('button', { name: 'IR', exact: true }).click();
   await page.locator('[data-comecar-revisao]').click();

@@ -1,14 +1,10 @@
-// Lista todos os áudios que o app fala numa aula (para o professor gravar).
-// Usa as mesmas atividades que o estudante vê, então a lista sempre bate com o app.
+// O que o app fala em cada atividade (letras, sílabas, palavras, frases...).
+// Usado pelos testes e pela lista de áudios prontos de letras e sílabas.
 
-import type { Aula, Conteudo } from '../conteudo/tipos';
+import type { Aula } from '../conteudo/tipos';
 import type { Atividade } from './tipos';
 import type { ItemAudio } from '../audio/pronuncia';
-import { chaveDoItem } from '../audio/pronuncia';
-import { gerarCandidatas } from './gerar';
 import { formatarReais, resultadoComoTexto } from '../conteudo/contas';
-import { TODAS_AS_INSTRUCOES, FRASES_ACERTO, FRASE_DEMONSTRACAO, FRASE_RESPOSTA, FRASE_SUA_VEZ, FRASE_TENTAR_DE_NOVO } from './rotulos';
-import { criarSorteio } from '../util/aleatorio';
 
 const i = (categoria: ItemAudio['categoria'], texto: string): ItemAudio => ({ categoria, texto });
 const semPontuacao = (t: string) => t.replace(/[.,!?;:"“”]/g, '');
@@ -71,30 +67,4 @@ export function audiosDaAtividade(a: Atividade): ItemAudio[] {
 /** Fala de abertura da aula (a mesma da tela de abertura). */
 export function falaDaAbertura(aula: Aula): string {
   return `Aula ${aula.aula}. ${aula.objetivo ?? ''}`.trim();
-}
-
-/** Todos os áudios de uma aula, sem repetição. */
-export function audiosDaAula(c: Conteudo, aula: Aula): ItemAudio[] {
-  const itens = [i('instrucao', falaDaAbertura(aula)), ...gerarCandidatas(c, aula, criarSorteio(aula.aula)).flatMap(audiosDaAtividade)];
-  const vistos = new Set<string>();
-  return itens.filter((x) => {
-    const k = chaveDoItem(x);
-    if (vistos.has(k) || !x.texto.trim()) return false;
-    vistos.add(k);
-    return true;
-  });
-}
-
-/** Instruções e frases fixas do app (iguais em todas as aulas). */
-export function audiosDoApp(): ItemAudio[] {
-  return [
-    ...TODAS_AS_INSTRUCOES.map((t) => i('instrucao', t)),
-    ...[...FRASES_ACERTO, FRASE_TENTAR_DE_NOVO, FRASE_RESPOSTA, FRASE_DEMONSTRACAO, FRASE_SUA_VEZ, 'Dá, sim.', 'Não dá.'].map((t) => i('retorno', t)),
-    ...[
-      'Toque no botão laranja para praticar.',
-      'Escolha a parte do caderno. Ou digite o número da aula.',
-      'Escolha a unidade.',
-      'Escolha a aula. O número da aula está no caderno.',
-    ].map((t) => i('instrucao', t)),
-  ];
 }

@@ -36,13 +36,6 @@
   color-scheme: light;
 }
 
-html[data-tamanho='grande'] {
-  --escala: 1.18;
-}
-html[data-tamanho='muito-grande'] {
-  --escala: 1.36;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -71,12 +64,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-html[data-animacoes='nao'] *,
-html[data-animacoes='nao'] *::before,
-html[data-animacoes='nao'] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+/* Quem pediu ao celular para reduzir o movimento não vê animações. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 #app {
@@ -1003,61 +999,6 @@ button,
   font-size: 0.9rem;
 }
 
-/* Painel de gravação (estudante e professor) */
-.painel-gravacao {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.botoes-gravacao {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-.botoes-gravacao.dois {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.botoes-gravacao .botao {
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  min-height: 84px;
-  padding: 8px 4px;
-  border-width: 2px;
-}
-.botoes-gravacao .botao.gravando {
-  background: #b3261e;
-  border-color: #b3261e;
-  color: #fff;
-  font-size: 1.15rem;
-}
-.ponto-gravando {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  animation: piscar 1s steps(2, start) infinite;
-}
-@keyframes piscar {
-  to {
-    visibility: hidden;
-  }
-}
-.contador {
-  font-size: 0.95rem;
-  font-variant-numeric: tabular-nums;
-}
-.aviso-gravacao {
-  margin: 0;
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-align: center;
-  min-height: 1.2em;
-}
-.item-gravacao .painel-gravacao .botao {
-  min-height: 64px;
-}
-
 /* Fim da sessão */
 .fim {
   flex: 1;
@@ -1075,186 +1016,7 @@ button,
   color: var(--destaque);
 }
 
-/* Progresso */
-details.parte {
-  background: var(--cartao);
-  border: 2px solid var(--borda);
-  border-radius: 16px;
-  padding: 4px 14px;
-  margin-bottom: 12px;
-}
-details.parte summary {
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  font-weight: 700;
-  font-size: 1.15rem;
-  cursor: pointer;
-}
-.unidade-progresso h2 {
-  font-size: 1rem;
-  margin: 10px 0 6px;
-  text-transform: uppercase;
-}
-.linhas-progresso {
-  list-style: none;
-  margin: 0 0 10px;
-  padding: 0;
-}
-.linhas-progresso li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--borda);
-  font-size: 1.05rem;
-}
-.linhas-progresso .sim {
-  color: var(--verde);
-  font-weight: 700;
-}
-.linhas-progresso .nao {
-  color: var(--texto-suave);
-}
-.resumo-progresso {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0 0 14px;
-}
-
-/* Modo professor */
-.professor {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding-bottom: 32px;
-}
-.professor h2 {
-  font-size: 1.25rem;
-  margin-top: 8px;
-}
-.professor p {
-  margin: 0;
-}
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-weight: 700;
-}
-.campo select,
-.campo input[type='number'],
-.campo input[type='text'],
-.campo input[type='password'] {
-  font: inherit;
-  min-height: 56px;
-  border: 2px solid var(--texto);
-  border-radius: 12px;
-  padding: 6px 12px;
-  background: var(--cartao);
-  color: var(--texto);
-}
-.campo input[type='range'] {
-  min-height: 44px;
-  accent-color: var(--destaque);
-}
-.escolha-grupo {
-  border: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.escolha-grupo legend {
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.escolha-grupo label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 4px 12px;
-  border: 2px solid var(--borda);
-  border-radius: 12px;
-  background: var(--cartao);
-}
-.escolha-grupo input {
-  width: 26px;
-  height: 26px;
-  accent-color: var(--destaque);
-}
-.itens-gravacao {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.item-gravacao {
-  background: var(--cartao);
-  border: 2px solid var(--borda);
-  border-radius: 14px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.item-gravacao .cabeca {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: baseline;
-}
-.item-gravacao .texto {
-  font-size: 1.35rem;
-  font-weight: 700;
-  word-break: break-word;
-}
-.item-gravacao .origem {
-  font-size: 0.8rem;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 2px 8px;
-  border: 2px solid var(--texto-suave);
-  white-space: nowrap;
-}
-.item-gravacao .origem.professor {
-  border-color: var(--verde);
-  color: var(--verde);
-}
-.item-gravacao .acoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.item-gravacao .acoes .botao {
-  width: auto;
-  min-height: 56px;
-  font-size: 0.9rem;
-  padding: 6px 12px;
-  border-width: 2px;
-}
-.item-gravacao .fala {
-  font-size: 0.9rem;
-  color: var(--texto-suave);
-}
-.pin {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: stretch;
-  max-width: 360px;
-  margin: 0 auto;
-  width: 100%;
-}
-.pin input {
-  font-size: 2.2rem;
-  letter-spacing: 0.5em;
-  text-align: center;
-}
+/* Aviso de nova versão, carregando e botões desligados */
 .nova-versao {
   position: fixed;
   left: 16px;
@@ -1290,46 +1052,4 @@ details.parte summary {
 .botao[disabled] {
   opacity: 0.45;
   cursor: default;
-}
-
-/* Entrada e conta Google */
-.entrada {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-  text-align: center;
-}
-.entrada .marca {
-  justify-content: center;
-}
-.botao-google .fundo-g {
-  background: #fff;
-  border-radius: 10px;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.conta {
-  border-top: 2px solid var(--borda);
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.conta p {
-  margin: 0;
-  font-weight: 700;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--texto-suave);
-}
-.conta .botao {
-  min-height: 64px;
-  font-size: 1.05rem;
 }

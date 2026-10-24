@@ -1,27 +1,21 @@
-// Correção 2: ritmo natural da voz e instruções curtas.
+// Ritmo natural da voz e instruções curtas.
 import { describe, expect, it } from 'vitest';
-import { normalizarConfig, VELOCIDADE_MAXIMA, VELOCIDADE_MINIMA, config } from '../src/dados/config';
+import { VELOCIDADE_DA_VOZ, VOGAL_NAS_SILABAS, MOSTRAR_NUMEROS_E_DINHEIRO } from '../src/config/padroes';
 import { instrucaoDe, TODAS_AS_INSTRUCOES } from '../src/atividades/rotulos';
 import { gerarCandidatas } from '../src/atividades/gerar';
 import { criarSorteio } from '../src/util/aleatorio';
 import { conteudo } from './apoio';
 
-describe('velocidade da voz', () => {
-  it('padrão 1,0 e ajuste de 0,9 a 1,2', () => {
-    expect(config().velocidade).toBe(1);
-    expect(VELOCIDADE_MINIMA).toBe(0.9);
-    expect(VELOCIDADE_MAXIMA).toBe(1.2);
-  });
-  it('a velocidade antiga (0,85) passa para 1,0; valores fora da faixa são ajustados', () => {
-    expect(normalizarConfig({ velocidade: 0.85 }).velocidade).toBe(1);
-    expect(normalizarConfig({ velocidade: 0.5 }).velocidade).toBe(0.9);
-    expect(normalizarConfig({ velocidade: 2 }).velocidade).toBe(1.2);
-    expect(normalizarConfig({ velocidade: 1.1 }).velocidade).toBe(1.1);
+describe('valores fixos (src/config/padroes.ts)', () => {
+  it('voz do celular a 1,0, vogal aberta, números e dinheiro incluídos', () => {
+    expect(VELOCIDADE_DA_VOZ).toBe(1);
+    expect(VOGAL_NAS_SILABAS).toBe('aberta');
+    expect(MOSTRAR_NUMEROS_E_DINHEIRO).toBe(true);
   });
 });
 
 describe('instruções', () => {
-  it('são uma frase curta e direta (no máximo 6 palavras) e estão na lista do professor', () => {
+  it('são uma frase curta e direta (no máximo 6 palavras) e estão na lista de instruções', () => {
     const vistas = new Set<string>();
     for (const a of conteudo.aulas)
       for (const at of gerarCandidatas(conteudo, a, criarSorteio(1))) vistas.add(instrucaoDe(at));
@@ -33,16 +27,5 @@ describe('instruções', () => {
     expect(vistas).toContain('Escute e toque a letra.');
     expect(vistas).toContain('Qual é a sílaba?');
     expect(vistas).toContain('Forme a palavra.');
-  });
-});
-
-describe('gravação de voz', () => {
-  it('escolhe o formato nesta ordem: webm com opus, webm, mp4 (iPhone)', async () => {
-    const { formatoDeGravacao, FORMATOS } = await import('../src/audio/gravador');
-    expect(FORMATOS).toEqual(['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']);
-    expect(formatoDeGravacao(() => true)).toBe('audio/webm;codecs=opus');
-    expect(formatoDeGravacao((m) => m === 'audio/webm' || m === 'audio/mp4')).toBe('audio/webm');
-    expect(formatoDeGravacao((m) => m === 'audio/mp4')).toBe('audio/mp4'); // Safari
-    expect(formatoDeGravacao(() => false)).toBe('');
   });
 });

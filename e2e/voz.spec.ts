@@ -1,4 +1,4 @@
-// Correção 2: a voz em ritmo natural. Usa uma voz "de mentira" que anota cada fala.
+// A voz em ritmo natural. Usa uma voz "de mentira" que anota cada fala.
 import { test, expect } from '@playwright/test';
 import { resolverAtividade } from './ajudantes';
 
@@ -39,14 +39,6 @@ test.beforeEach(async ({ page }) => {
         this.text = t;
       }
     };
-    // Sem demonstrações: queremos medir o ritmo das atividades.
-    localStorage.setItem(
-      'caderno-pratica:progresso',
-      JSON.stringify({ sessoes: 0, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [
-        'conheca', 'escute_letra', 'diga_letra', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra',
-        'quantas_silabas', 'escute_palavra', 'escreva', 'complete_frase', 'ligue', 'leia', 'ordene', 'maiuscula',
-        'conte', 'conta', 'pague', 'troco', 'da', 'hora'] }),
-    );
   });
 });
 

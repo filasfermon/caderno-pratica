@@ -436,7 +436,7 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
   return lista;
 }
 
-/** Usado pelos testes e pelo modo professor: o conhecimento da aula. */
+/** Usado pelos testes: o conhecimento da aula. */
 export function conhecimento(aula: Aula): Conhecimento {
   return conhecimentoDaAula(aula);
 }

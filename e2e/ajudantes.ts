@@ -2,7 +2,16 @@
 // Cada tela de atividade guarda a resposta esperada em data-resposta (só para os testes).
 import { type Page } from '@playwright/test';
 
-async function esperarFimDaDemonstracao(page: Page): Promise<void> {
+/**
+ * A demonstração aparece na primeira vez de cada tipo de atividade, desde que o app abriu
+ * (nada fica guardado). Os testes tocam PULAR, como faria quem já sabe fazer.
+ */
+export async function pularDemonstracao(page: Page): Promise<void> {
+  // Dá tempo de a demonstração começar (ela começa logo que a atividade abre).
+  await page.waitForTimeout(150);
+  if (await page.locator('[data-sessao][data-demo]').count()) {
+    await page.locator('[data-pular-demo]').click().catch(() => undefined);
+  }
   await page.waitForFunction(() => !document.querySelector('[data-sessao][data-demo]'), null, { timeout: 90_000 });
 }
 
@@ -12,7 +21,7 @@ async function clicarSePuder(page: Page, seletor: string): Promise<void> {
 
 /** Resolve a atividade que está na tela. Devolve o tipo resolvido. */
 export async function resolverAtividade(page: Page): Promise<string> {
-  await esperarFimDaDemonstracao(page);
+  await pularDemonstracao(page);
   const tipo = (await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '';
   const indice = (await page.getAttribute('[data-sessao]', 'data-indice')) ?? '';
   const resposta = JSON.parse((await page.getAttribute('.area', 'data-resposta')) ?? 'null');

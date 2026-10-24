@@ -1,7 +1,7 @@
 // QUAIS AULAS E ATIVIDADES APARECEM NO APP
 //
 // - Aulas da lista de exclusão (src/config/aulas_excluidas.ts) não aparecem.
-// - Atividades de números e dinheiro podem ser desligadas no modo professor.
+// - Atividades de números e dinheiro podem ser desligadas em src/config/padroes.ts.
 // - Aulas que ficam sem nenhuma atividade de reconhecimento também não aparecem.
 // Nada disso trava o acesso: toda aula que aparece abre livremente.
 
@@ -10,15 +10,16 @@ import type { Atividade, TipoAtividade } from './tipos';
 import { ehAtividadeDeNumeros } from './tipos';
 import { gerarCandidatas } from './gerar';
 import { aulaNaListaDeExclusao } from '../config/aulas_excluidas';
+import { MOSTRAR_NUMEROS_E_DINHEIRO } from '../config/padroes';
 import { criarSorteio, type Sorteio } from '../util/aleatorio';
 import { maiusculas } from '../util/texto';
 
 export interface OpcoesConteudo {
-  /** Mostrar atividades de números e dinheiro (chave do modo professor). */
+  /** Mostrar atividades de números e dinheiro (valor fixo em src/config/padroes.ts). */
   numeros: boolean;
 }
 
-export const OPCOES_PADRAO: OpcoesConteudo = { numeros: true };
+export const OPCOES_PADRAO: OpcoesConteudo = { numeros: MOSTRAR_NUMEROS_E_DINHEIRO };
 
 /** Atividades possíveis de uma aula, já com a lista de exclusão e a chave de números aplicadas. */
 export function atividadesDaAula(c: Conteudo, aula: Aula, s: Sorteio, op: OpcoesConteudo = OPCOES_PADRAO): Atividade[] {
@@ -57,7 +58,7 @@ export function tiposObrigatorios(aula: Aula): TipoAtividade[] {
 
 /**
  * Confere as aulas aos poucos, quando o celular está parado, para as telas
- * ESCOLHER A AULA e MEU PROGRESSO abrirem sem demora.
+ * Partes, Unidades e Aulas abrirem sem demora.
  */
 export function prepararAulasDisponiveis(c: Conteudo, op: OpcoesConteudo = OPCOES_PADRAO): void {
   if (typeof requestIdleCallback !== 'function') return; // sem esse recurso, confere na hora (como antes)

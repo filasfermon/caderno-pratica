@@ -1,39 +1,28 @@
-// Início do app: carrega o conteúdo, aplica as configurações e liga as telas.
+// Início do app: carrega o conteúdo e liga as telas.
+// O app não tem conta nem cadastro e não guarda nenhum dado no aparelho.
 
 import './estilo.css';
 import { el } from './util/dom';
 import { definirConteudo, mostrarTela, obterConteudo, raiz } from './app';
 import type { Conteudo } from './conteudo/tipos';
-import { aplicarConfigNaTela, opcoesDoConteudo } from './dados/config';
-import { carregarCorrecoes } from './audio/pronuncia';
-import { telaInicio } from './telas/inicio';
 import { telaAulasDaUnidade, telaPartes, telaUnidades } from './telas/escolher';
 import { telaAula } from './telas/aula';
-import { telaProgresso } from './telas/progresso';
-import { telaProfessor, pararGravacaoDoProfessor } from './telas/professor';
 import { registrarServiceWorker } from './pwa';
-import { entradaPendente, iniciarConta, precisaEscolherConta } from './conta/conta';
 import { prepararAulasDisponiveis } from './atividades/disponiveis';
-import { telaEntrada } from './telas/entrada';
+import { apagarDadosDeVersoesAntigas } from './dados/apagar-antigos';
 
 function rotear(): void {
-  pararGravacaoDoProfessor();
   const caminho = location.hash.replace(/^#\/?/, '').split('?')[0];
-  const partes = caminho.split('/').filter(Boolean);
-  const [secao, a, b] = partes;
-  // Primeira vez (com a conta Google configurada): escolher ENTRAR COM GOOGLE ou SEM CONTA.
-  if (secao !== 'professor' && (precisaEscolherConta() || entradaPendente())) return telaEntrada();
+  const [secao, a, b] = caminho.split('/').filter(Boolean);
   if (secao === 'escolher' && a === 'parte') return telaUnidades(Number(b));
   if (secao === 'escolher' && a === 'unidade') return telaAulasDaUnidade(Number(b));
-  if (secao === 'escolher') return telaPartes();
   if (secao === 'aula') return telaAula(Number(a));
-  if (secao === 'progresso') return telaProgresso();
-  if (secao === 'professor') return telaProfessor(partes.slice(1));
-  return telaInicio();
+  // Tela inicial = ESCOLHER A AULA (endereços antigos, como #/progresso e #/professor, também vêm para cá).
+  return telaPartes();
 }
 
 async function iniciar(): Promise<void> {
-  aplicarConfigNaTela();
+  apagarDadosDeVersoesAntigas();
   raiz().replaceChildren(el('p', { class: 'carregando' }, 'CARREGANDO...'));
   try {
     // O conteúdo vem sempre do arquivo conteudo_licoes.json (nada fixo no código).
@@ -47,12 +36,9 @@ async function iniciar(): Promise<void> {
     );
     return;
   }
-  await carregarCorrecoes().catch(() => undefined);
   window.addEventListener('hashchange', rotear);
   rotear();
-  // Conta Google (se configurada): termina o login e liga a sincronização, sem travar o app.
-  void iniciarConta();
-  prepararAulasDisponiveis(obterConteudo(), opcoesDoConteudo());
+  prepararAulasDisponiveis(obterConteudo());
 }
 
 registrarServiceWorker();

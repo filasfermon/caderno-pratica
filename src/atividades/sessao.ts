@@ -1,11 +1,11 @@
-// MONTAGEM DA SESSÃO: 8 a 12 atividades curtas.
-// Cerca de 70% vêm da aula escolhida e 30% são revisão de aulas anteriores
-// (repetição espaçada: o que o estudante errou volta mais cedo).
+// MONTAGEM DA SESSÃO (a "prática"): 8 a 12 atividades curtas.
+// SÓ ESTA AULA: tudo vem da aula escolhida. ESTA AULA + REVISÃO: cerca de 70% da aula
+// e 30% sorteados de aulas anteriores. Nada é guardado: o app não lembra de uma
+// prática para outra (os erros voltam só no fim da mesma prática, em telas/aula.ts).
 
 import type { Aula, Conteudo } from '../conteudo/tipos';
 import type { Atividade, TipoAtividade } from './tipos';
 import { atividadesDaAula, aulaDisponivel, tiposObrigatorios, OPCOES_PADRAO, type OpcoesConteudo } from './disponiveis';
-import { itensParaRevisar, type Progresso } from '../dados/progresso';
 import { embaralhar, type Sorteio } from '../util/aleatorio';
 
 /** Ordem didática: primeiro conhecer e ouvir, depois montar, escrever e ler textos. */
@@ -54,14 +54,9 @@ export interface Sessao {
 }
 
 /** Escolhe atividades variando os tipos (um de cada tipo por rodada; os obrigatórios primeiro). */
-function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso, s: Sorteio, sortear = true, obrigatorios: TipoAtividade[] = []): Atividade[] {
+function escolherVariado(candidatas: Atividade[], quantas: number, s: Sorteio, sortear = true, obrigatorios: TipoAtividade[] = []): Atividade[] {
   const porTipo = new Map<TipoAtividade, Atividade[]>();
-  // Itens nunca vistos ou "vencidos" primeiro; dentro disso, ordem sorteada.
-  const prioridade = (a: Atividade) => {
-    const it = p.itens[a.chave];
-    return it === undefined ? 0 : it.proxima <= p.sessoes ? 1 : 2;
-  };
-  const ordenadas = (sortear ? embaralhar(candidatas, s) : [...candidatas]).sort((a, b) => prioridade(a) - prioridade(b));
+  const ordenadas = sortear ? embaralhar(candidatas, s) : [...candidatas];
   for (const a of ordenadas) {
     if (!porTipo.has(a.tipo)) porTipo.set(a.tipo, []);
     porTipo.get(a.tipo)!.push(a);
@@ -87,11 +82,10 @@ function escolherVariado(candidatas: Atividade[], quantas: number, p: Progresso,
   return escolhidas;
 }
 
-/** Atividades de revisão de aulas anteriores. */
+/** Atividades de revisão: sorteadas das aulas anteriores mais próximas (sem memória). */
 export function escolherRevisao(
   c: Conteudo,
   aula: Aula,
-  p: Progresso,
   quantas: number,
   s: Sorteio,
   evitar: Set<string>,
@@ -115,27 +109,15 @@ export function escolherRevisao(
     evitar.add(a.chave);
     escolhidas.push({ ...a, revisao: true });
   };
-  // 1) O que já venceu na repetição espaçada (os mais errados primeiro).
-  for (const [chave, item] of itensParaRevisar(p, aula.aula)) {
-    if (escolhidas.length >= quantas) break;
-    const a = candidatasDa(item.aula).find((x) => x.chave === chave);
-    if (a) usar(a);
+  // Itens das aulas anteriores mais próximas, em ordem sorteada, variando os tipos.
+  const banco: Atividade[] = [];
+  for (let n = aula.aula - 1, olhadas = 0; n >= 1 && olhadas < 15; n--) {
+    const lista = candidatasDa(n);
+    if (!lista.length) continue;
+    olhadas++;
+    banco.push(...lista);
   }
-  // 2) Completa com itens das aulas anteriores mais próximas (primeiro os nunca praticados),
-  //    variando os tipos de atividade.
-  if (escolhidas.length < quantas) {
-    const banco: Atividade[] = [];
-    for (let n = aula.aula - 1, olhadas = 0; n >= 1 && olhadas < 15; n--) {
-      const lista = candidatasDa(n);
-      if (!lista.length) continue;
-      olhadas++;
-      banco.push(...embaralhar(lista, s));
-    }
-    const nuncaVistos = banco.filter((x) => !p.itens[x.chave] && !evitar.has(x.chave));
-    for (const a of escolherVariado(nuncaVistos, quantas - escolhidas.length, p, s, false)) usar(a);
-    const outros = banco.filter((x) => !evitar.has(x.chave));
-    for (const a of escolherVariado(outros, quantas - escolhidas.length, p, s, false)) usar(a);
-  }
+  for (const a of escolherVariado(banco.filter((x) => !evitar.has(x.chave)), quantas, s)) usar(a);
   return escolhidas;
 }
 
@@ -153,7 +135,6 @@ const NAO_REPETIR: TipoAtividade[] = ['conheca', 'leia', 'diga_letra'];
 export function montarSessao(
   c: Conteudo,
   aula: Aula,
-  p: Progresso,
   s: Sorteio,
   total = 10,
   op: OpcoesConteudo = OPCOES_PADRAO,
@@ -165,13 +146,13 @@ export function montarSessao(
   const obrigatorios = tiposObrigatorios(aula);
 
   const querRevisao = modo === 'revisao' ? Math.round(tamanho * 0.3) : 0;
-  let daAula = escolherVariado(proprias, tamanho - querRevisao, p, s, true, obrigatorios);
+  let daAula = escolherVariado(proprias, tamanho - querRevisao, s, true, obrigatorios);
   const evitar = new Set(daAula.map((a) => a.chave));
-  const revisao = modo === 'revisao' ? escolherRevisao(c, aula, p, tamanho - daAula.length, s, evitar, op) : [];
+  const revisao = modo === 'revisao' ? escolherRevisao(c, aula, tamanho - daAula.length, s, evitar, op) : [];
   // Se faltou revisão (começo do caderno), completa com mais atividades da própria aula.
   if (daAula.length + revisao.length < tamanho) {
     const resto = proprias.filter((a) => !evitar.has(a.chave));
-    daAula = [...daAula, ...escolherVariado(resto, tamanho - daAula.length - revisao.length, p, s)];
+    daAula = [...daAula, ...escolherVariado(resto, tamanho - daAula.length - revisao.length, s)];
   }
   // Aula com pouco conteúdo: repete atividades de responder (não as de só ouvir e ler).
   // Se a aula só tiver atividades de ouvir e ler, a sessão fica mais curta.

@@ -4,11 +4,9 @@ import { atividadesDaAula, aulaDisponivel, aulasDisponiveis, tiposObrigatorios }
 import { montarSessao } from '../src/atividades/sessao';
 import { ehAtividadeDeNumeros, TIPOS_DE_NUMEROS } from '../src/atividades/tipos';
 import { PARTES_EXCLUIDAS, aulaNaListaDeExclusao } from '../src/config/aulas_excluidas';
-import { registrarItem, type Progresso } from '../src/dados/progresso';
 import { criarSorteio } from '../src/util/aleatorio';
 import { aula, conteudo } from './apoio';
 
-const vazio = (): Progresso => ({ sessoes: 1, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [] });
 const SEM_NUMEROS = { numeros: false };
 
 describe('lista de exclusão', () => {
@@ -28,12 +26,9 @@ describe('lista de exclusão', () => {
   });
 
   it('aulas excluídas não entram na revisão', () => {
-    const p = vazio();
     for (let k = 0; k < 20; k++) {
-      const s = montarSessao(conteudo, aula(9), p, criarSorteio(k), 10, undefined, 'revisao');
+      const s = montarSessao(conteudo, aula(9), criarSorteio(k), 10, undefined, 'revisao');
       for (const at of s.atividades) expect(aulaNaListaDeExclusao(aula(at.aula))).toBe(false);
-      for (const at of s.atividades) registrarItem(p, at.chave, at.aula, false);
-      p.sessoes++;
     }
   });
 });
@@ -49,7 +44,7 @@ describe('atividades de reconhecimento obrigatórias', () => {
       // ...e os três aparecem de fato na sessão
       for (const modo of ['aula', 'revisao'] as const)
         for (let semente = 1; semente <= 3; semente++) {
-          const naSessao = new Set(montarSessao(conteudo, a, vazio(), criarSorteio(semente), 10, undefined, modo).atividades.filter((x) => !x.revisao).map((x) => x.tipo));
+          const naSessao = new Set(montarSessao(conteudo, a, criarSorteio(semente), 10, undefined, modo).atividades.filter((x) => !x.revisao).map((x) => x.tipo));
           for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(naSessao, `sessão ${modo} aula ${a.aula}: ${t}`).toContain(t);
         }
     }
@@ -74,7 +69,7 @@ describe('atividades de reconhecimento obrigatórias', () => {
 describe('chave "mostrar atividades de números e dinheiro"', () => {
   it('desligada: nenhuma atividade de números nas sessões', () => {
     for (const a of aulasDisponiveis(conteudo, SEM_NUMEROS)) {
-      const s = montarSessao(conteudo, a, vazio(), criarSorteio(a.aula), 10, SEM_NUMEROS, 'revisao');
+      const s = montarSessao(conteudo, a, criarSorteio(a.aula), 10, SEM_NUMEROS, 'revisao');
       for (const at of s.atividades) {
         expect(TIPOS_DE_NUMEROS, `aula ${a.aula}`).not.toContain(at.tipo);
         expect(ehAtividadeDeNumeros(at), `aula ${a.aula} ${at.tipo}`).toBe(false);

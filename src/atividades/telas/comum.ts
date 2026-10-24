@@ -4,10 +4,7 @@ import { el } from '../../util/dom';
 import { icones } from '../../ui/icones';
 import type { ItemAudio } from '../../audio/pronuncia';
 import { falar } from '../../audio/voz';
-import { cancelarGravacaoEmAndamento, podeGravar } from '../../audio/gravador';
-import { criarPainelGravacao } from '../../ui/painel-gravacao';
 import type { Contexto } from './contrato';
-import { config } from '../../dados/config';
 
 /** Texto que, tocado, é lido em voz alta. */
 export function tocavel(texto: string, item: ItemAudio, classe = ''): HTMLButtonElement {
@@ -36,11 +33,10 @@ export interface Escolha {
 
 /**
  * Opções com palavras compridas ficam numa coluna só, para as letras continuarem grandes
- * (no mínimo 40 px) mesmo no celular pequeno e no "texto muito grande".
+ * (no mínimo 40 px) mesmo no celular pequeno.
  */
 export function classeDasColunas(opcoes: string[]): string {
-  const limite = config().tamanhoTexto === 'normal' ? 5 : 3;
-  return opcoes.some((o) => o.length > limite) ? 'uma-coluna' : '';
+  return opcoes.some((o) => o.length > 5) ? 'uma-coluna' : '';
 }
 
 /**
@@ -136,19 +132,4 @@ export function criarMontagem(vagas: number, classePeca = ''): {
       caixa.classList.add('certa');
     },
   };
-}
-
-/** Desliga o microfone se o estudante sair da tela no meio de uma gravação. */
-export function pararGravacaoDoEstudante(): void {
-  cancelarGravacaoEmAndamento();
-}
-
-/**
- * "Ouça e repita": o estudante grava a própria leitura e ouve em seguida,
- * comparando com o modelo. Sem avaliação automática. A última gravação de cada
- * item fica guardada só neste aparelho.
- */
-export function criarOucaERepita(chave: string, texto: string, modelo: () => void, aoGravar?: () => void): HTMLElement | null {
-  if (!podeGravar()) return null;
-  return criarPainelGravacao({ gaveta: 'aluno', chave: `aluno:${chave}`, texto, modelo, aoSalvar: () => aoGravar?.() }).elemento;
 }

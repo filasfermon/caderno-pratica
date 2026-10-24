@@ -19,7 +19,7 @@ import type {
   DigaLetra,
 } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
-import { botaoOuvirDeNovo, classeDasColunas, criarEscolha, criarMontagem, criarOucaERepita, tocavel } from './comum';
+import { botaoOuvirDeNovo, classeDasColunas, criarEscolha, criarMontagem, tocavel } from './comum';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
 
@@ -41,8 +41,6 @@ export function montarConheca(a: Conheca, ctx: Contexto): Controle {
   }
   alvo.addEventListener('click', () => void ctx.falar(item));
   ctx.area.append(cartaz);
-  const repita = criarOucaERepita(a.chave, a.alvo, () => void ctx.falar(item));
-  if (repita) ctx.area.append(repita);
   return {
     modelo: async () => {
       await ctx.falar(item);
@@ -59,13 +57,13 @@ export function montarDigaLetra(a: DigaLetra, ctx: Contexto): Controle {
   const modelo = itemDe(a.alvo, 'tecla');
   const letra = el('button', { type: 'button', class: 'tocavel leitura-gigante', 'aria-label': `Letra ${a.alvo}. Toque para ouvir o nome.` }, a.alvo);
   letra.addEventListener('click', () => void ctx.falar(modelo));
-  ctx.area.append(el('div', { class: 'cartaz' }, letra));
-  const repita = criarOucaERepita(a.chave, a.alvo, () => void ctx.falar(modelo), () => ctx.concluir());
-  if (repita) ctx.area.append(repita);
+  ctx.area.append(el('div', { class: 'cartaz' }, letra), botaoOuvirDeNovo(() => void ctx.falar(modelo)));
   return {
-    // Não fala o nome sozinho: o estudante tenta primeiro. O nome toca no botão MODELO.
-    modelo: async () => undefined,
-    passosDemo: () => [() => ctx.area.querySelector<HTMLElement>('[data-ouvir-modelo]')],
+    modelo: async () => {
+      await ctx.falar(modelo);
+      ctx.concluir();
+    },
+    passosDemo: () => [() => letra],
   };
 }
 
@@ -330,8 +328,6 @@ export function montarLeia(a: Leia, ctx: Contexto): Controle {
   };
   const ouvir = botaoOuvirDeNovo(() => void lerTudo());
   ctx.area.append(caixa, ouvir);
-  const repita = criarOucaERepita(a.chave, a.linhas.join(' '), () => void lerTudo());
-  if (repita) ctx.area.append(el('p', { class: 'etiqueta' }, 'AGORA LEIA SOZINHO. SE QUISER, GRAVE A SUA LEITURA.'), repita);
   return {
     modelo: async () => {
       await lerTudo();

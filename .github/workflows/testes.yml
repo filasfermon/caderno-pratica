@@ -1,4 +1,4 @@
-# Roda todos os testes (Vitest, Playwright e os testes da conta Google com os emuladores do Firebase) em pull requests.
+# Roda todos os testes (Vitest e Playwright) em pull requests.
 name: Testes
 
 on:
@@ -18,13 +18,5 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
-        env:
-          CI: '1'
-      # Conta Google (Firebase): roda com os emuladores do Firebase (precisam de Java, que já vem no Ubuntu do GitHub).
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-      - run: npm run test:e2e:firebase
         env:
           CI: '1'

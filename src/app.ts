@@ -5,7 +5,6 @@ import { el, limpar } from './util/dom';
 import { icones } from './ui/icones';
 import type { Conteudo } from './conteudo/tipos';
 import { falarEmSequencia, pararFala } from './audio/voz';
-import { pararGravacaoDoEstudante } from './atividades/telas/comum';
 
 let conteudo: Conteudo | null = null;
 
@@ -34,11 +33,10 @@ export function irPara(rota: string): void {
   else location.hash = rota;
 }
 
-/** Troca o conteúdo da tela. Para a voz e o microfone da tela anterior. */
+/** Troca o conteúdo da tela. Para a voz da tela anterior. */
 export function mostrarTela(titulo: string, ...filhos: (Node | null)[]): number {
   numeroDaTela++;
   pararFala();
-  pararGravacaoDoEstudante();
   const app = raiz();
   limpar(app);
   for (const f of filhos) if (f) app.appendChild(f);

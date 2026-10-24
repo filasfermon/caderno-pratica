@@ -9,7 +9,7 @@ import type { Contexto, Controle, PassoDemo } from './contrato';
 import { botaoOuvirDeNovo, criarEscolha } from './comum';
 import { decompor, desenharDinheiro, desenharEmDezEUm, desenharQuantidade, desenharRelogio } from '../../ui/desenhos';
 import { combinacaoExata, formatarReais, resultadoComoTexto } from '../../conteudo/contas';
-import { animacoesLigadas } from '../../dados/config';
+import { animacoesLigadas } from '../../ui/movimento';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
 

@@ -58,7 +58,7 @@ export function instrucaoDe(a: Atividade): string {
   }
 }
 
-/** Todas as instruções possíveis (o professor pode gravar cada uma). */
+/** Todas as instruções possíveis (conferidas nos testes). */
 export const TODAS_AS_INSTRUCOES = [
   'Escute e leia a letra.',
   'Escute e leia a sílaba.',

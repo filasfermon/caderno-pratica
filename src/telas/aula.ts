@@ -26,16 +26,9 @@ import {
 } from '../atividades/rotulos';
 import { falar, falarEmSequencia, pararFala } from '../audio/voz';
 import { somDeAcerto } from '../audio/sons';
-import { config, animacoesLigadas, opcoesDoConteudo } from '../dados/config';
+import { animacoesLigadas } from '../ui/movimento';
 import { aulaDisponivel } from '../atividades/disponiveis';
-import {
-  iniciarSessao,
-  jaViuTipo,
-  marcarResultado,
-  marcarTipoVisto,
-  progresso,
-  terminarSessao,
-} from '../dados/progresso';
+import { ATIVIDADES_POR_PRATICA } from '../config/padroes';
 import { criarSorteio, sortearUm, type Sorteio } from '../util/aleatorio';
 import type { Aula } from '../conteudo/tipos';
 import { falaDaAbertura } from '../atividades/audios';
@@ -48,16 +41,16 @@ export function telaAula(numero: number): void {
   const c = obterConteudo();
   const aula = aulaPorNumero(c, numero);
   if (!aula) {
-    mostrarTela('Aula', topo({ titulo: 'AULA', voltar: '#/escolher' }), el('p', { class: 'aviso' }, 'ESSA AULA NÃO EXISTE NO CADERNO.'));
+    mostrarTela('Aula', topo({ titulo: 'AULA', voltar: '#/' }), el('p', { class: 'aviso' }, 'ESSA AULA NÃO EXISTE NO CADERNO.'));
     return;
   }
-  if (!aulaDisponivel(c, aula, opcoesDoConteudo())) {
+  if (!aulaDisponivel(c, aula)) {
     // Aula da lista de exclusão ou sem atividades de reconhecimento: não há o que praticar no app.
     mostrarTela(
       `Aula ${aula.aula}`,
-      topo({ titulo: `AULA ${aula.aula}`, voltar: '#/escolher' }),
+      topo({ titulo: `AULA ${aula.aula}`, voltar: '#/' }),
       el('p', { class: 'aviso', 'data-aula-indisponivel': '' }, MENSAGEM_SEM_CONTEUDO.toLocaleUpperCase('pt-BR')),
-      el('a', { class: 'botao principal', href: '#/escolher' }, 'ESCOLHER OUTRA AULA'),
+      el('a', { class: 'botao principal', href: '#/' }, 'ESCOLHER OUTRA AULA'),
     );
     anunciar(MENSAGEM_SEM_CONTEUDO);
     return;
@@ -66,10 +59,7 @@ export function telaAula(numero: number): void {
   const objetivo = aula.objetivo ? formatarParaAula(aula.objetivo, aula) : '';
   const fala = [falaDaAbertura(aula), 'Toque em só esta aula para começar.'];
   // Duas formas de praticar. O padrão é SÓ ESTA AULA: o professor muitas vezes escolhe a aula que vai ensinar.
-  const comecar = (modo: ModoSessao) => {
-    iniciarSessao(aula.aula);
-    rodarSessao(montarSessao(c, aula, progresso(), sorteio, config().atividadesPorSessao, opcoesDoConteudo(), modo), sorteio);
-  };
+  const comecar = (modo: ModoSessao) => rodarSessao(montarSessao(c, aula, sorteio, ATIVIDADES_POR_PRATICA, undefined, modo), sorteio);
   const soEsta = el('button', { type: 'button', class: 'botao principal', 'data-comecar': '' }, icones.seguir(34), 'SÓ ESTA AULA');
   soEsta.addEventListener('click', () => comecar('aula'));
   const comRevisao = el('button', { type: 'button', class: 'botao', 'data-comecar-revisao': '' }, icones.seguir(30), 'ESTA AULA + REVISÃO');
@@ -93,8 +83,11 @@ export function telaAula(numero: number): void {
 // ---------- Sessão ----------
 //
 // Navegação livre: cada bolinha leva direto à sua atividade; VOLTAR e AVANÇAR andam
-// uma de cada vez; TERMINAR encerra quando quiser. Pular ou voltar NÃO conta como erro:
-// só a resposta dada entra no progresso e na repetição espaçada.
+// uma de cada vez; TERMINAR encerra quando quiser. Pular ou voltar NÃO conta como erro.
+// Nada é guardado no aparelho: ao sair da prática, tudo é esquecido.
+
+/** Tipos de atividade já demonstrados desde que o app abriu (só na memória, nunca guardado). */
+const tiposDemonstrados = new Set<string>();
 
 interface EstadoAtividade {
   feita: boolean;
@@ -149,7 +142,6 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     if (!viva()) return;
     visita++;
     pararFala();
-    if (feitas() > 0) terminarSessao(aula.aula);
     telaFim(aula, feitas());
   };
   const irPara = (i: number, fala?: string) => {
@@ -207,11 +199,12 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     ouvirInstrucao.onclick = () => void falar({ categoria: 'instrucao', texto: instrucao });
     window.scrollTo(0, 0);
 
-    if (!jaViuTipo(at.tipo)) {
-      await demonstrar(at, area, faixa, sorteio, () => viva() && visita === minhaVisita);
+    if (!tiposDemonstrados.has(at.tipo)) {
+      const instruiu = await demonstrar(at, area, faixa, sorteio, () => viva() && visita === minhaVisita);
       if (!viva() || visita !== minhaVisita) return;
-      marcarTipoVisto(at.tipo);
-      tipoInstruido = at.tipo; // a demonstração já falou a instrução
+      tiposDemonstrados.add(at.tipo);
+      // Se a demonstração chegou a falar a instrução, ela não é repetida logo em seguida.
+      if (instruiu) tipoInstruido = at.tipo;
     }
     const estado = estados[indice];
     if (estado.feita && estado.resultado !== 'ouvida') mostrarRespostaDada(at, estado);
@@ -264,7 +257,6 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     const meuIndice = indice;
     const vale = () => viva() && visita === minhaVisita;
     let tentativas = 0;
-    let teveErro = false;
     let terminado = false;
     let controle: Controle = {};
     const registrar = (resultado: EstadoAtividade['resultado'], resposta?: string) => {
@@ -285,7 +277,6 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         if (terminado) return;
         terminado = true;
         controle.travar?.();
-        marcarResultado(at.chave, at.aula, !teveErro);
         registrar('certo', resposta);
         somDeAcerto();
         mostrarSinalDeCerto();
@@ -302,7 +293,6 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       errou: (resposta) => {
         if (terminado) return;
         tentativas++;
-        teveErro = true;
         if (tentativas === 1) {
           mensagem.textContent = FRASE_TENTAR_DE_NOVO.toLocaleUpperCase('pt-BR');
           void (async () => {
@@ -314,7 +304,6 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         } else {
           terminado = true;
           controle.travar?.();
-          marcarResultado(at.chave, at.aula, false);
           registrar('mostrada', resposta);
           mensagem.textContent = FRASE_RESPOSTA.toLocaleUpperCase('pt-BR');
           void (async () => {
@@ -326,14 +315,12 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         }
       },
       errouParcial: () => {
-        teveErro = true;
         mensagem.textContent = FRASE_TENTAR_DE_NOVO.toLocaleUpperCase('pt-BR');
         void falar({ categoria: 'retorno', texto: FRASE_TENTAR_DE_NOVO });
       },
       concluir: () => {
         if (terminado) return;
         terminado = true;
-        marcarResultado(at.chave, at.aula, true);
         registrar('ouvida');
         // Só ouvir, ler e falar: o estudante decide quando seguir (AVANÇAR fica em destaque).
         avancar.classList.add('principal');
@@ -363,9 +350,10 @@ function mostrarSinalDeCerto(): void {
   setTimeout(() => sinal.remove(), 1100);
 }
 
-// ---------- Demonstração animada (primeira vez de cada tipo) ----------
+// ---------- Demonstração animada (primeira vez de cada tipo, desde que o app abriu) ----------
 
-async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, sorteio: Sorteio, viva: () => boolean): Promise<void> {
+/** Devolve true se a demonstração chegou a falar a instrução até o fim (PULAR pode interromper antes). */
+async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, sorteio: Sorteio, viva: () => boolean): Promise<boolean> {
   area.replaceChildren();
   faixa.hidden = false;
   const corpo = area.closest('[data-sessao]') as HTMLElement;
@@ -396,18 +384,20 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
     errouParcial: () => undefined,
     concluir: () => undefined,
   };
+  let instruiu = false;
   try {
     const controle = montarAtividade(at, ctxDemo);
     await falar({ categoria: 'retorno', texto: FRASE_DEMONSTRACAO });
-    if (!continuar()) return;
+    if (!continuar()) return instruiu;
     await falar({ categoria: 'instrucao', texto: instrucaoDe(at) });
-    if (!continuar()) return;
+    if (!continuar()) return instruiu;
+    instruiu = true;
     corpo.dataset.demo = 'modelo';
     if (at.tipo !== 'troco' && at.tipo !== 'leia') await controle.modelo?.();
     let k = 0;
     for (const passo of controle.passosDemo?.() ?? []) {
       corpo.dataset.demo = `passo-${++k}`;
-      if (!continuar()) return;
+      if (!continuar()) return instruiu;
       const alvo = passo();
       if (!alvo) continue;
       alvo.scrollIntoView({ block: 'center', behavior: 'auto' });
@@ -422,7 +412,7 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
       mao.classList.remove('toque');
       await esperar(250);
     }
-    if (!continuar()) return;
+    if (!continuar()) return instruiu;
     corpo.dataset.demo = 'fim';
     await esperar(200);
     await falar({ categoria: 'retorno', texto: FRASE_SUA_VEZ });
@@ -435,6 +425,7 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
     area.replaceChildren();
     window.scrollTo(0, 0);
   }
+  return instruiu;
 }
 
 // ---------- Fim da sessão ----------

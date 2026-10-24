@@ -6,7 +6,7 @@
 // Como mudar:
 //  - PARTES_EXCLUIDAS: números das Partes inteiras que não aparecem no app.
 //  - AULAS_EXCLUIDAS: números de aulas avulsas que não aparecem no app.
-// Aulas excluídas somem da lista de aulas, do "Meu progresso" e da revisão.
+// Aulas excluídas somem da lista de aulas e da revisão.
 //
 // Além desta lista, o app esconde sozinho as aulas que não têm nenhuma atividade
 // de reconhecimento (por exemplo, aulas que são só para fazer no caderno).

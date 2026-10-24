@@ -1,28 +1,19 @@
-// Correção 3: as bolinhas navegam; VOLTAR, AVANÇAR e TERMINAR; pular não conta como erro.
+// As bolinhas navegam; VOLTAR, AVANÇAR e TERMINAR; pular não conta como erro.
 import { test, expect } from '@playwright/test';
-import { resolverAtividade } from './ajudantes';
-
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    if (!localStorage.getItem('caderno-pratica:progresso'))
-      localStorage.setItem(
-        'caderno-pratica:progresso',
-        JSON.stringify({ sessoes: 0, ultimaAula: null, aulas: {}, itens: {}, tiposVistos: [
-          'conheca', 'escute_letra', 'diga_letra', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra',
-          'quantas_silabas', 'escute_palavra', 'escreva', 'complete_frase', 'ligue', 'leia', 'ordene', 'maiuscula',
-          'conte', 'conta', 'pague', 'troco', 'da', 'hora'] }),
-      );
-  });
-});
+import { pularDemonstracao, resolverAtividade } from './ajudantes';
 
 const indice = (page: import('@playwright/test').Page) => page.getAttribute('[data-sessao]', 'data-indice');
-const itensNoProgresso = (page: import('@playwright/test').Page) =>
-  page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('caderno-pratica:progresso') ?? '{}').itens ?? {}).length);
 
 test('bolinhas, voltar, avançar, refazer e terminar', async ({ page }) => {
   await page.goto('/#/aula/23');
   await page.locator('[data-comecar]').click();
+  await pularDemonstracao(page);
   const bolinhas = page.locator('[data-bolinha]');
+  // Cada tipo novo começa com uma demonstração (PULAR encerra).
+  const tocar = async (alvo: import('@playwright/test').Locator) => {
+    await alvo.click();
+    await pularDemonstracao(page);
+  };
   const total = await bolinhas.count();
   expect(total).toBeGreaterThanOrEqual(8);
 
@@ -36,30 +27,28 @@ test('bolinhas, voltar, avançar, refazer e terminar', async ({ page }) => {
   await expect(bolinhas.nth(0)).toHaveAttribute('aria-current', 'step');
   await expect(page.locator('[data-voltar]')).toBeDisabled();
 
-  // Pular para a frente (bolinha 4) e voltar não conta como erro nem entra no progresso
-  await bolinhas.nth(3).click();
+  // Pular para a frente (bolinha 4) e voltar não conta como erro
+  await tocar(bolinhas.nth(3));
   expect(await indice(page)).toBe('3');
   await expect(bolinhas.nth(3)).toHaveAttribute('aria-current', 'step');
-  await page.locator('[data-avancar]').click();
+  await tocar(page.locator('[data-avancar]'));
   expect(await indice(page)).toBe('4');
-  await page.locator('[data-voltar]').click();
-  await page.locator('[data-voltar]').click();
+  await tocar(page.locator('[data-voltar]'));
+  await tocar(page.locator('[data-voltar]'));
   expect(await indice(page)).toBe('2');
-  expect(await itensNoProgresso(page)).toBe(0);
 
   // Responder uma atividade que tem resposta (as de só ouvir/falar não mostram resposta dada).
   // A ordem das atividades é sorteada: procura a primeira, a partir da 3.
   const SO_OUVIR = ['conheca', 'leia', 'diga_letra'];
   let k = 2;
-  await bolinhas.nth(k).click();
-  while (SO_OUVIR.includes((await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '')) await bolinhas.nth(++k).click();
+  await tocar(bolinhas.nth(k));
+  while (SO_OUVIR.includes((await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '')) await tocar(bolinhas.nth(++k));
   expect(await indice(page)).toBe(String(k));
   // Respondida → fica marcada com ✓ e o app segue para a próxima
   await resolverAtividade(page);
   expect(await indice(page)).toBe(String(k + 1));
   await expect(bolinhas.nth(k)).toHaveAttribute('aria-label', `Atividade ${k + 1} de ${total}, feita`);
   await expect(bolinhas.nth(k)).toContainText('✓');
-  expect(await itensNoProgresso(page)).toBe(1);
 
   // Voltar à atividade respondida: mostra a resposta dada e deixa refazer
   await bolinhas.nth(k).click();

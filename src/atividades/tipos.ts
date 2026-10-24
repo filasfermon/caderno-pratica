@@ -4,7 +4,7 @@
 export type TipoAtividade =
   | 'conheca' // 1
   | 'escute_letra' // escute e toque a letra certa
-  | 'diga_letra' // veja a letra e diga o nome dela (voz do modelo + gravação do aluno)
+  | 'diga_letra' // veja a letra e diga o nome dela (voz do modelo)
   | 'escute_silaba' // 2
   | 'monte_silaba' // 3
   | 'complete_palavra' // 4
@@ -219,12 +219,12 @@ export type Atividade =
   | Da
   | Hora;
 
-/** Atividades sem certo/errado (só ouvir, ler, falar e gravar). */
+/** Atividades sem certo/errado (só ouvir, ler e falar). */
 export function ehSoDeOuvir(a: Atividade): boolean {
   return a.tipo === 'conheca' || a.tipo === 'leia' || a.tipo === 'diga_letra';
 }
 
-/** Atividades de números e dinheiro (podem ser desligadas no modo professor). */
+/** Atividades de números e dinheiro (podem ser desligadas em src/config/padroes.ts). */
 export const TIPOS_DE_NUMEROS: TipoAtividade[] = ['conte', 'conta', 'pague', 'troco', 'da', 'hora'];
 
 export function ehAtividadeDeNumeros(a: Atividade): boolean {
