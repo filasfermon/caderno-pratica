@@ -313,14 +313,34 @@ button,
   font-weight: 700;
   font-size: 1.5rem;
 }
-.marca h1 {
-  font-size: 1.35rem;
-}
 .marca p {
   margin: 0;
-  color: var(--texto-suave);
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   font-weight: 700;
+}
+.marca p small {
+  display: block;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+/* Tela inicial: ESCOLHER A AULA em letras grandes */
+.titulo-inicio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.titulo-inicio h1 {
+  flex: 1 1 100%;
+  font-size: 2.1rem; /* cerca de 38 px */
+  line-height: 1.1;
+}
+.inicio .busca label {
+  font-size: 1.1rem;
+}
+.lista-escolha.grande .botao {
+  font-size: 1.25rem;
+  min-height: 80px;
 }
 
 /* ---------- Listas de escolha ---------- */

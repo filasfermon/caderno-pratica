@@ -2,7 +2,7 @@
 
 import { el } from '../util/dom';
 import { icones } from '../ui/icones';
-import { anunciar, irPara, mostrarTela, obterConteudo, textoPaginas, topo } from '../app';
+import { anunciar, botaoOuvir, irPara, mostrarTela, obterConteudo, textoPaginas, topo } from '../app';
 import type { Aula } from '../conteudo/tipos';
 import { aulaDisponivel } from '../atividades/disponiveis';
 
@@ -62,12 +62,12 @@ export function telaPartes(): void {
       'div',
       { class: 'inicio' },
       el('div', { class: 'marca' }, el('div', { class: 'selo', 'aria-hidden': 'true' }, 'Aa'), el('p', {}, 'CADERNO PRÁTICA', el('small', {}, c.titulo.toLocaleUpperCase('pt-BR')))),
-      topo({ titulo: 'ESCOLHER A AULA', fala }),
+      el('header', { class: 'titulo-inicio' }, el('h1', {}, 'ESCOLHER A AULA'), botaoOuvir(() => fala)),
+      busca(),
     ),
-    busca(),
     el(
       'ul',
-      { class: 'lista-escolha', 'aria-label': 'Partes do caderno' },
+      { class: 'lista-escolha grande', 'aria-label': 'Partes do caderno' },
       ...c.partes.filter((p) => c.aulas.some((a) => a.parte === p.parte && disponivel(a))).map((p) =>
         el(
           'li',
