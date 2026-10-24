@@ -4,6 +4,7 @@
 //  - Acerto: som suave, ✓ verde grande e uma frase curta ("Isso mesmo.").
 //  - 1º erro: "Vamos tentar de novo." e o modelo é repetido.
 //  - 2º erro: a resposta certa aparece destacada, é lida e a sessão segue.
+//  - O que teve erro volta UMA vez no fim desta mesma prática (nada fica guardado).
 //  Nunca há cronômetro, vidas, placar ou contagem de erros.
 
 import { el, esperar } from '../util/dom';
@@ -25,6 +26,7 @@ import {
   instrucaoDe,
 } from '../atividades/rotulos';
 import { falar, falarEmSequencia, pararFala } from '../audio/voz';
+import { botaoMaisDevagar } from '../atividades/telas/comum';
 import { somDeAcerto } from '../audio/sons';
 import { animacoesLigadas } from '../ui/movimento';
 import { aulaDisponivel } from '../atividades/disponiveis';
@@ -111,8 +113,17 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
   const bolinhas = el('ol', { class: 'bolinhas' });
   const navBolinhas = el('nav', { 'aria-label': 'Atividades da sessão' }, bolinhas);
   const textoInstrucao = el('p', { id: 'instrucao' });
-  const ouvirInstrucao = el('button', { type: 'button', class: 'botao-ouvir', 'aria-label': 'Ouvir a instrução de novo' }, icones.altoFalante(34));
-  const selo = el('span', { class: 'selo-revisao', hidden: true }, 'REVISÃO');
+  // O alto-falante sempre fala a instrução completa; a tartaruga, a mesma instrução mais devagar.
+  let instrucaoAtual = '';
+  const falarInstrucao = (velocidade?: number) => void falar({ categoria: 'instrucao', texto: instrucaoAtual }, { velocidade });
+  const ouvirInstrucao = el(
+    'div',
+    { class: 'ouvir' },
+    el('button', { type: 'button', class: 'botao-ouvir', 'aria-label': 'Ouvir a instrução de novo', onclick: () => falarInstrucao() }, icones.altoFalante(34)),
+    botaoMaisDevagar(falarInstrucao),
+  );
+  const selo = el('span', { class: 'selo-revisao', hidden: true, 'data-revisao': '' }, 'REVISÃO');
+  const seloDeNovo = el('span', { class: 'selo-revisao', hidden: true, 'data-de-novo': '' }, 'DE NOVO');
   const faixa = el('div', { class: 'demonstracao-faixa', hidden: true }, 'VEJA COMO SE FAZ');
   const area = el('div', { class: 'area' });
   const mensagem = el('p', { class: 'mensagem-retorno', 'aria-live': 'assertive' });
@@ -127,6 +138,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     navBolinhas,
     el('h1', { class: 'visualmente-oculto' }, `Aula ${aula.aula}: prática`),
     selo,
+    seloDeNovo,
     faixa,
     el('div', { class: 'instrucao' }, ouvirInstrucao, textoInstrucao),
     refazer,
@@ -137,6 +149,17 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
   const minhaTela = mostrarTela(`Aula ${aula.aula}`, corpo);
   const viva = () => telaAtual() === minhaTela;
   const feitas = () => estados.filter((e) => e.feita).length;
+  /** Atividades (pela posição) que já voltaram no fim da prática por causa de um erro. */
+  const jaVoltaram = new Set<number>();
+  /** Errou nesta atividade: ela volta uma vez no fim da prática (sem memória depois). */
+  const voltarNoFim = (i: number) => {
+    const at = atividades[i];
+    if (at.deNovo || jaVoltaram.has(i)) return;
+    jaVoltaram.add(i);
+    atividades.push({ ...at, deNovo: true, revisao: false });
+    estados.push({ feita: false });
+    desenharBolinhas();
+  };
 
   const encerrar = () => {
     if (!viva()) return;
@@ -188,6 +211,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     mensagem.className = 'mensagem-retorno';
     refazer.hidden = true;
     selo.hidden = !at.revisao;
+    seloDeNovo.hidden = !at.deNovo;
     corpo.dataset.tipo = at.tipo;
     corpo.dataset.indice = String(indice);
     corpo.dataset.feita = estados[indice].feita ? 'sim' : 'nao';
@@ -195,8 +219,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     avancar.classList.remove('principal');
     const instrucao = instrucaoDe(at);
     textoInstrucao.textContent = instrucao;
-    // O alto-falante sempre fala a instrução completa.
-    ouvirInstrucao.onclick = () => void falar({ categoria: 'instrucao', texto: instrucao });
+    instrucaoAtual = instrucao;
     window.scrollTo(0, 0);
 
     if (!tiposDemonstrados.has(at.tipo)) {
@@ -225,6 +248,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       errou: () => undefined,
       errouParcial: () => undefined,
       concluir: () => undefined,
+      seguir: () => undefined,
     };
     const controle = montarAtividade(at, ctx);
     void Promise.resolve(controle.mostrarResposta?.()).then(() => {
@@ -257,6 +281,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
     const meuIndice = indice;
     const vale = () => viva() && visita === minhaVisita;
     let tentativas = 0;
+    let errou = false;
     let terminado = false;
     let controle: Controle = {};
     const registrar = (resultado: EstadoAtividade['resultado'], resposta?: string) => {
@@ -278,6 +303,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         terminado = true;
         controle.travar?.();
         registrar('certo', resposta);
+        if (errou) voltarNoFim(meuIndice);
         somDeAcerto();
         mostrarSinalDeCerto();
         const frase = sortearUm(FRASES_ACERTO, sorteio);
@@ -293,6 +319,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       errou: (resposta) => {
         if (terminado) return;
         tentativas++;
+        errou = true;
         if (tentativas === 1) {
           mensagem.textContent = FRASE_TENTAR_DE_NOVO.toLocaleUpperCase('pt-BR');
           void (async () => {
@@ -305,6 +332,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
           terminado = true;
           controle.travar?.();
           registrar('mostrada', resposta);
+          voltarNoFim(meuIndice);
           mensagem.textContent = FRASE_RESPOSTA.toLocaleUpperCase('pt-BR');
           void (async () => {
             await falar({ categoria: 'retorno', texto: FRASE_RESPOSTA });
@@ -315,6 +343,7 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         }
       },
       errouParcial: () => {
+        errou = true;
         mensagem.textContent = FRASE_TENTAR_DE_NOVO.toLocaleUpperCase('pt-BR');
         void falar({ categoria: 'retorno', texto: FRASE_TENTAR_DE_NOVO });
       },
@@ -324,7 +353,10 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
         registrar('ouvida');
         // Só ouvir, ler e falar: o estudante decide quando seguir (AVANÇAR fica em destaque).
         avancar.classList.add('principal');
-        avancar.focus({ preventScroll: true });
+        if (at.tipo !== 'ouca_fale') avancar.focus({ preventScroll: true });
+      },
+      seguir: () => {
+        if (vale()) irPara(meuIndice + 1);
       },
     };
     controle = montarAtividade(at, ctx);
@@ -337,8 +369,9 @@ function rodarSessao(sessao: Sessao, sorteio: Sorteio): void {
       if (!vale() || terminado) return;
       if (ok || ehSoDeOuvir(at)) await controle.modelo?.();
     })();
-    // Conheça, Leia e Diga: depois de um tempo, a atividade conta como feita mesmo sem tocar em nada.
-    if (ehSoDeOuvir(at)) setTimeout(() => vale() && !terminado && ctx.concluir(), 8000);
+    // Conheça e Leia: depois de um tempo, a atividade conta como feita mesmo sem tocar em nada.
+    // (O "Ouça e fale" conta como feita quando termina a volta: ouça, fale você, ouça de novo.)
+    if (ehSoDeOuvir(at) && at.tipo !== 'ouca_fale') setTimeout(() => vale() && !terminado && ctx.concluir(), 8000);
   };
 
   void mostrarAtividade();
@@ -383,6 +416,7 @@ async function demonstrar(at: Atividade, area: HTMLElement, faixa: HTMLElement, 
     errou: () => undefined,
     errouParcial: () => undefined,
     concluir: () => undefined,
+    seguir: () => undefined,
   };
   let instruiu = false;
   try {

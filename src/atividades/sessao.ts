@@ -12,7 +12,7 @@ import { embaralhar, type Sorteio } from '../util/aleatorio';
 const ESTAGIO: Record<TipoAtividade, number> = {
   conheca: 1,
   escute_letra: 1,
-  diga_letra: 2,
+  ouca_fale: 2,
   escute_silaba: 2,
   monte_silaba: 3,
   escute_palavra: 4,
@@ -36,6 +36,7 @@ const ESTAGIO: Record<TipoAtividade, number> = {
 /** Quantas vezes, no máximo, cada tipo aparece numa sessão. */
 const MAXIMO: Partial<Record<TipoAtividade, number>> = {
   conheca: 2,
+  ouca_fale: 2,
   leia: 1,
   ligue: 1,
   maiuscula: 1,
@@ -44,7 +45,7 @@ const MAXIMO: Partial<Record<TipoAtividade, number>> = {
 
 /** Tipos que servem bem para revisão (curtos). */
 const BONS_PARA_REVISAO: TipoAtividade[] = [
-  'escute_letra', 'diga_letra', 'escute_silaba', 'escute_palavra', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
+  'escute_letra', 'ouca_fale', 'escute_silaba', 'escute_palavra', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
   'escreva', 'complete_frase', 'ordene', 'ligue', 'maiuscula', 'conte', 'conta', 'pague', 'troco', 'da', 'hora',
 ];
 
@@ -56,7 +57,10 @@ export interface Sessao {
 /** Escolhe atividades variando os tipos (um de cada tipo por rodada; os obrigatórios primeiro). */
 function escolherVariado(candidatas: Atividade[], quantas: number, s: Sorteio, sortear = true, obrigatorios: TipoAtividade[] = []): Atividade[] {
   const porTipo = new Map<TipoAtividade, Atividade[]>();
-  const ordenadas = sortear ? embaralhar(candidatas, s) : [...candidatas];
+  // "Ouça e fale" de letras vem antes do de sílabas e palavras (a letra é o centro da aula).
+  const ordenadas = (sortear ? embaralhar(candidatas, s) : [...candidatas]).sort(
+    (a, b) => Number(a.tipo === 'ouca_fale' && a.categoria !== 'letra') - Number(b.tipo === 'ouca_fale' && b.categoria !== 'letra'),
+  );
   for (const a of ordenadas) {
     if (!porTipo.has(a.tipo)) porTipo.set(a.tipo, []);
     porTipo.get(a.tipo)!.push(a);
@@ -129,7 +133,7 @@ export function escolherRevisao(
 export type ModoSessao = 'aula' | 'revisao';
 
 /** Tipos que podem se repetir para completar a sessão (os de só ouvir/ler não se repetem). */
-const NAO_REPETIR: TipoAtividade[] = ['conheca', 'leia', 'diga_letra'];
+const NAO_REPETIR: TipoAtividade[] = ['conheca', 'leia', 'ouca_fale'];
 
 /** Monta a sessão de uma aula. Aula sem atividades → sessão vazia (a aula nem aparece na lista). */
 export function montarSessao(

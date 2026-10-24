@@ -15,8 +15,10 @@ export interface Contexto {
   errou(resposta?: string): void;
   /** Erro "pequeno" numa atividade de várias partes (ex.: um par do Ligue): só pede nova tentativa. */
   errouParcial(): void;
-  /** Para atividades sem certo/errado (Conheça, Leia): libera o SEGUIR. */
+  /** Para atividades sem certo/errado (Conheça, Leia, Ouça e fale): conta como feita. */
   concluir(): void;
+  /** Vai para a próxima atividade (botão SEGUIR do "Ouça e fale"). */
+  seguir(): void;
   falar(item: ItemAudio, opcoes?: OpcoesFala): Promise<void>;
   /** true durante a demonstração animada. */
   emDemonstracao(): boolean;

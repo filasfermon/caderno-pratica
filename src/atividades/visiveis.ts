@@ -11,7 +11,7 @@ export function textosVisiveis(a: Atividade): string[] {
   switch (a.tipo) {
     case 'escute_letra':
       return a.opcoes;
-    case 'diga_letra':
+    case 'ouca_fale':
       return [a.alvo];
     case 'conheca':
       return [a.alvo, ...(a.silabas ? [a.silabas.join(' + ')] : [])];

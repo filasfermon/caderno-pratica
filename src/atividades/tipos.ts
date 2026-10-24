@@ -4,7 +4,7 @@
 export type TipoAtividade =
   | 'conheca' // 1
   | 'escute_letra' // escute e toque a letra certa
-  | 'diga_letra' // veja a letra e diga o nome dela (voz do modelo)
+  | 'ouca_fale' // ouça, fale você e ouça de novo (letra, sílaba ou palavra)
   | 'escute_silaba' // 2
   | 'monte_silaba' // 3
   | 'complete_palavra' // 4
@@ -33,6 +33,8 @@ interface Base {
   aula: number;
   /** true quando a atividade é de revisão de uma aula anterior. */
   revisao?: boolean;
+  /** true quando a atividade voltou no fim da prática porque o estudante errou. */
+  deNovo?: boolean;
 }
 
 export type TipoTexto = 'letra' | 'silaba' | 'palavra' | 'par';
@@ -44,9 +46,12 @@ export interface EscuteLetra extends Base {
   opcoes: string[];
 }
 
-export interface DigaLetra extends Base {
-  tipo: 'diga_letra';
+/** Ouça e fale: o app fala o modelo, o estudante fala, o app fala o modelo de novo. Nada é gravado. */
+export interface OucaFale extends Base {
+  tipo: 'ouca_fale';
   alvo: string;
+  /** Letra (dita pelo nome: "pê"), sílaba ou palavra. */
+  categoria: 'letra' | 'silaba' | 'palavra';
 }
 
 export interface Conheca extends Base {
@@ -199,7 +204,7 @@ export interface Hora extends Base {
 export type Atividade =
   | Conheca
   | EscuteLetra
-  | DigaLetra
+  | OucaFale
   | EscuteSilaba
   | MonteSilaba
   | CompletePalavra
@@ -221,7 +226,7 @@ export type Atividade =
 
 /** Atividades sem certo/errado (só ouvir, ler e falar). */
 export function ehSoDeOuvir(a: Atividade): boolean {
-  return a.tipo === 'conheca' || a.tipo === 'leia' || a.tipo === 'diga_letra';
+  return a.tipo === 'conheca' || a.tipo === 'leia' || a.tipo === 'ouca_fale';
 }
 
 /** Atividades de números e dinheiro (podem ser desligadas em src/config/padroes.ts). */

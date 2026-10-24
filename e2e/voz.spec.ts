@@ -21,7 +21,7 @@ test('voz a 1,0, sem pausas longas, e a instrução não se repete no mesmo tipo
   for (const f of falas) expect(f.rate).toBe(1);
   // 2) A instrução só é falada quando o tipo de atividade muda
   const mudancas = tipos.filter((t, i) => i === 0 || t !== tipos[i - 1]).length;
-  const faladas = falas.filter((f) => /^(Escute e leia|Escute e toque a letra|Diga o nome|Qual é|Forme a|Complete a|Quantas sílabas|Escreva a palavra|Ligue |Conte e toque|Faça a conta|Pague o preço|Quanto é o troco|O dinheiro dá|Que horas são)/.test(f.texto));
+  const faladas = falas.filter((f) => /^(Escute e leia|Escute e toque a letra|Ouça e fale|Qual é|Forme a|Complete a|Quantas sílabas|Escreva a palavra|Ligue |Conte e toque|Faça a conta|Pague o preço|Quanto é o troco|O dinheiro dá|Que horas são)/.test(f.texto));
   expect(faladas.length).toBe(mudancas);
   // 3) Depois do retorno de acerto, a fala seguinte começa em até 250 ms (com folga de 100 ms do teste)
   for (let i = 0; i < falas.length - 1; i++) {

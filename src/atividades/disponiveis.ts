@@ -46,14 +46,14 @@ export function aulasDisponiveis(c: Conteudo, op: OpcoesConteudo = OPCOES_PADRAO
 /**
  * Tipos que não podem faltar na sessão:
  * nas aulas das vogais (Unidades 3 e 4) e nas aulas "Aprenda" de cada consoante,
- * "Escute e toque a letra", "Escute e toque a sílaba" e "Diga o nome da letra".
+ * "Escute e toque a letra", "Escute e toque a sílaba" e "Ouça e fale".
  */
 export function tiposObrigatorios(aula: Aula): TipoAtividade[] {
   const tipos = (aula.tipo ?? []).map(maiusculas);
   const deNumeros = tipos.some((t) => t.includes('NÚMEROS'));
   const dasVogais = (aula.unidade === 3 || aula.unidade === 4) && !deNumeros;
   const aprendaConsoante = tipos.includes('APRENDA') && (aula.letras_novas ?? []).length > 0;
-  return dasVogais || aprendaConsoante ? ['escute_letra', 'escute_silaba', 'diga_letra'] : [];
+  return dasVogais || aprendaConsoante ? ['escute_letra', 'escute_silaba', 'ouca_fale'] : [];
 }
 
 /**

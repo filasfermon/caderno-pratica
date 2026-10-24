@@ -28,8 +28,8 @@ export async function resolverAtividade(page: Page): Promise<string> {
   switch (tipo) {
     case 'conheca':
     case 'leia':
-    case 'diga_letra':
-      break; // só ouvir/falar: o botão SEGUIR aparece sozinho
+    case 'ouca_fale':
+      break; // só ouvir, ler e falar: nada a tocar na área
     case 'monte_silaba':
     case 'forme_palavra':
     case 'ordene':
@@ -56,11 +56,14 @@ export async function resolverAtividade(page: Page): Promise<string> {
       }
       break;
     default:
-      // Escolhas: escute, complete, quantas, conte, troco, dá?, hora, tutorial
+      // Escolhas: escute, complete, quantas, conte, troco, dá?, hora
       await clicarSePuder(page, '.area [data-certo="sim"]');
   }
-  if (['conheca', 'leia', 'diga_letra'].includes(tipo)) {
-    // Atividades só de ouvir/ler/falar: contam como feitas depois de ouvidas; o estudante toca AVANÇAR.
+  if (tipo === 'ouca_fale') {
+    // Ouça, fale você, ouça de novo: depois aparece SEGUIR.
+    await page.locator('.area [data-seguir]').click({ timeout: 30_000 });
+  } else if (['conheca', 'leia'].includes(tipo)) {
+    // Só ouvir e ler: contam como feitas depois de ouvidas; o estudante toca AVANÇAR.
     await page.waitForSelector('[data-sessao][data-feita="sim"]', { timeout: 30_000 });
     await page.locator('[data-avancar]').click();
   }

@@ -5,15 +5,32 @@ import { icones } from '../../ui/icones';
 import type { ItemAudio } from '../../audio/pronuncia';
 import { falar } from '../../audio/voz';
 import type { Contexto } from './contrato';
+import { VELOCIDADE_MAIS_DEVAGAR } from '../../config/padroes';
 
 /** Texto que, tocado, é lido em voz alta. */
 export function tocavel(texto: string, item: ItemAudio, classe = ''): HTMLButtonElement {
   return el('button', { type: 'button', class: `tocavel ${classe}`, onclick: () => falar(item), 'aria-label': `${texto}. Toque para ouvir.` }, texto);
 }
 
-/** Botão grande de alto-falante ("ouvir de novo"). */
-export function botaoOuvirDeNovo(acao: () => void, rotulo = 'OUVIR DE NOVO'): HTMLButtonElement {
-  return el('button', { type: 'button', class: 'botao', onclick: acao }, icones.altoFalante(30), rotulo);
+/**
+ * Botão da tartaruga (MAIS DEVAGAR): toca o mesmo áudio uma vez a 0,8.
+ * Não é uma configuração e não fica guardado.
+ */
+export function botaoMaisDevagar(acao: (velocidade: number) => void): HTMLButtonElement {
+  return el(
+    'button',
+    { type: 'button', class: 'botao-devagar', 'aria-label': 'Mais devagar', title: 'Mais devagar', 'data-mais-devagar': '', onclick: () => acao(VELOCIDADE_MAIS_DEVAGAR) },
+    icones.tartaruga(34),
+  );
+}
+
+/**
+ * Botão grande de alto-falante ("OUVIR DE NOVO") e, ao lado, a tartaruga (MAIS DEVAGAR).
+ * "acao" recebe a velocidade só quando é a tartaruga.
+ */
+export function botaoOuvirDeNovo(acao: (velocidade?: number) => void, rotulo = 'OUVIR DE NOVO'): HTMLElement {
+  const ouvir = el('button', { type: 'button', class: 'botao', 'data-ouvir-de-novo': '', onclick: () => acao() }, icones.altoFalante(30), rotulo);
+  return el('div', { class: 'ouvir-de-novo' }, ouvir, botaoMaisDevagar((v) => acao(v)));
 }
 
 export interface OpcaoEscolha {

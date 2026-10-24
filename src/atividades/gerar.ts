@@ -139,7 +139,7 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
     ? semRepetidos((aula.palavras ?? []).map((p) => F(p.trim())).filter((p) => ehPalavraSimples(p) && ok(p)))
     : palavras;
   // Aulas das vogais (Unidades 3 e 4) e aulas "Aprenda" de cada consoante: sempre têm
-  // "Escute e toque a letra", "Escute e toque a sílaba" e "Diga o nome da letra".
+  // "Escute e toque a letra", "Escute e toque a sílaba" e "Ouça e fale".
   const ehAulaDeNumeros = (aula.tipo ?? []).some((t) => maiusculas(t).includes('NÚMEROS'));
   const ehAulaDasVogais = (aula.unidade === 3 || aula.unidade === 4) && !ehAulaDeNumeros;
   const novas = letrasNovas(aula);
@@ -185,7 +185,7 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
       lista.push({ tipo: 'escute_silaba', chave: `escute_silaba|${alvo}`, aula: n, alvo, categoria: 'silaba', opcoes: embaralhar([alvo, ...distratores], s) });
   }
 
-  // ===== ESCUTE E TOQUE A LETRA  e  VEJA A LETRA E DIGA O NOME DELA =====
+  // ===== ESCUTE E TOQUE A LETRA  e  OUÇA E FALE (letra) =====
   for (const alvo of letrasU) {
     const minuscula = alvo !== maiusculas(alvo);
     const conhecidas = [...(minuscula ? k.minusculas : k.letras)].filter((l) => /^\p{L}$/u.test(l) && ok(l));
@@ -200,8 +200,13 @@ export function gerarCandidatas(c: Conteudo, aula: Aula, s: Sorteio): Atividade[
       .slice(0, 3);
     if (distratores.length >= 1)
       lista.push({ tipo: 'escute_letra', chave: `escute_letra|${alvo}`, aula: n, alvo, opcoes: embaralhar([alvo, ...distratores], s) });
-    lista.push({ tipo: 'diga_letra', chave: `diga_letra|${alvo}`, aula: n, alvo });
+    lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|letra:${alvo}`, aula: n, alvo, categoria: 'letra' });
   }
+
+  // ===== OUÇA E FALE (sílabas e palavras da aula) =====
+  for (const alvo of silabasAula) lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|silaba:${alvo}`, aula: n, alvo, categoria: 'silaba' });
+  for (const alvo of palavrasCurtas.filter((p) => ehPalavraSimples(p)).slice(0, 4))
+    lista.push({ tipo: 'ouca_fale', chave: `ouca_fale|palavra:${alvo}`, aula: n, alvo, categoria: 'palavra' });
 
   // ===== 3. MONTE A SÍLABA =====
   const consoantesConhecidas = [...k.letras].filter((l) => /^[A-Z]$/.test(l) && !ehVogal(l));

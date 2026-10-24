@@ -26,7 +26,7 @@ export function montarEscreva(a: Escreva, ctx: Contexto): Controle {
   pecas.apagar.classList.add('tecla', 'acao');
   pecas.apagar.classList.remove('botao-icone', 'contorno');
   pecas.grade.append(pecas.apagar);
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), pecas.montagem.caixa, pecas.grade);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), pecas.montagem.caixa, pecas.grade);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: pecas.reiniciar,
@@ -63,7 +63,7 @@ export function montarCompleteFrase(a: CompleteFrase, ctx: Contexto): Controle {
     a.opcoes.map((o) => ({ conteudo: o, certa: o === a.resposta, classe: 'leitura' })),
     classeDasColunas(a.opcoes),
   );
-  ctx.area.append(el('div', { class: 'cartaz' }, fraseEl), botaoOuvirDeNovo(() => void ctx.falar(comLacuna)), grade);
+  ctx.area.append(el('div', { class: 'cartaz' }, fraseEl), botaoOuvirDeNovo((v) => void ctx.falar(comLacuna, { velocidade: v })), grade);
   const preencher = () => {
     lacuna.textContent = a.resposta;
   };

@@ -22,7 +22,7 @@ test('aulas avançadas abrem direto; SÓ ESTA AULA é o padrão', async ({ page 
   const n = await page.locator('[data-bolinha]').count();
   for (let i = 0; i < n; i++) {
     await page.locator(`[data-bolinha="${i}"]`).click();
-    await expect(page.locator('.selo-revisao')).toBeHidden();
+    await expect(page.locator('[data-revisao]')).toBeHidden();
   }
 
   // ESTA AULA + REVISÃO também abre, em qualquer aula (busca pelo número)

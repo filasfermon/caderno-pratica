@@ -1,7 +1,7 @@
 // Telas das atividades de leitura: Conheça, Escute e toque, Monte a sílaba,
 // Complete a palavra, Forme a palavra, Quantas sílabas, Leia com a voz, Ordene a frase.
 
-import { el } from '../../util/dom';
+import { el, esperar } from '../../util/dom';
 import { icones } from '../../ui/icones';
 import type { ItemAudio } from '../../audio/pronuncia';
 import { falar, geracaoAtual } from '../../audio/voz';
@@ -16,9 +16,10 @@ import type {
   Ordene,
   QuantasSilabas,
   EscuteLetra,
-  DigaLetra,
+  OucaFale,
 } from '../tipos';
 import type { Contexto, Controle, PassoDemo } from './contrato';
+import { PAUSA_PARA_FALAR_MS } from '../../config/padroes';
 import { botaoOuvirDeNovo, classeDasColunas, criarEscolha, criarMontagem, tocavel } from './comum';
 
 const itemDe = (texto: string, categoria: ItemAudio['categoria']): ItemAudio => ({ categoria, texto });
@@ -50,20 +51,45 @@ export function montarConheca(a: Conheca, ctx: Contexto): Controle {
   };
 }
 
-// ---------- Veja a letra e diga o nome dela ----------
+// ---------- Ouça e fale (letra, sílaba ou palavra) ----------
+//
+// 1. o app fala o modelo; 2. a tela mostra AGORA FALE VOCÊ e espera cerca de 3 segundos
+// (aviso calmo, sem números); 3. o app fala o modelo de novo, para o estudante comparar
+// de ouvido. Depois: OUVIR DE NOVO (repete tudo) e SEGUIR. Nada é gravado.
 
-export function montarDigaLetra(a: DigaLetra, ctx: Contexto): Controle {
-  // O modelo é o NOME da letra ("pê"), como o estudante deve dizer.
-  const modelo = itemDe(a.alvo, 'tecla');
-  const letra = el('button', { type: 'button', class: 'tocavel leitura-gigante', 'aria-label': `Letra ${a.alvo}. Toque para ouvir o nome.` }, a.alvo);
-  letra.addEventListener('click', () => void ctx.falar(modelo));
-  ctx.area.append(el('div', { class: 'cartaz' }, letra), botaoOuvirDeNovo(() => void ctx.falar(modelo)));
+export function montarOucaFale(a: OucaFale, ctx: Contexto): Controle {
+  // A letra é dita pelo nome ("pê"), como o estudante deve dizer.
+  const modelo = itemDe(a.alvo, a.categoria === 'letra' ? 'tecla' : a.categoria);
+  const grande = a.alvo.length <= 4 ? 'leitura-gigante' : 'leitura';
+  const alvo = el('button', { type: 'button', class: `tocavel ${grande}`, 'aria-label': `${a.alvo}. Toque para ouvir.` }, a.alvo);
+  alvo.addEventListener('click', () => void ctx.falar(modelo));
+  const agora = el('p', { class: 'fale-voce', 'data-fale-voce': '', hidden: true }, el('span', { class: 'onda', 'aria-hidden': 'true' }, icones.falar(40)), 'AGORA FALE VOCÊ');
+  const seguir = el('button', { type: 'button', class: 'botao principal', 'data-seguir': '' }, 'SEGUIR', icones.seguir(30));
+  seguir.addEventListener('click', () => ctx.seguir());
+  const ouvir = botaoOuvirDeNovo((v) => void rodar(v));
+  const botoes = el('div', { class: 'pilha', hidden: true }, ouvir, seguir);
+  ctx.area.append(el('div', { class: 'cartaz' }, alvo), agora, botoes);
+  const naTela = () => seguir.isConnected;
+  let vez = 0;
+  /** Ouça → fale você → ouça de novo. Uma volta nova cancela a anterior. */
+  const rodar = async (velocidade?: number) => {
+    const minha = ++vez;
+    const vale = () => naTela() && minha === vez;
+    agora.hidden = true;
+    await ctx.falar(modelo, { velocidade });
+    if (!vale()) return;
+    agora.hidden = false;
+    await esperar(PAUSA_PARA_FALAR_MS);
+    if (!vale()) return;
+    agora.hidden = true;
+    await ctx.falar(modelo, { velocidade });
+    if (!vale()) return;
+    botoes.hidden = false;
+    ctx.concluir();
+  };
   return {
-    modelo: async () => {
-      await ctx.falar(modelo);
-      ctx.concluir();
-    },
-    passosDemo: () => [() => letra],
+    modelo: () => rodar(),
+    passosDemo: () => [],
   };
 }
 
@@ -78,7 +104,7 @@ export function montarEscute(a: EscuteSilaba | EscutePalavra | EscuteLetra, ctx:
     a.opcoes.map((o) => ({ conteudo: o, certa: o === a.alvo, classe: 'leitura' })),
     classeDasColunas(a.opcoes),
   );
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), grade);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), grade);
   return {
     modelo: () => ctx.falar(item),
     mostrarResposta: async () => {
@@ -193,7 +219,7 @@ function linhaDeApagar(pecas: Pecas): HTMLElement {
 export function montarMonteSilaba(a: MonteSilaba, ctx: Contexto): Controle {
   const item = itemDe(a.alvo, 'silaba');
   const pecas = criarPecas(ctx, { opcoes: a.opcoes, resposta: a.pecas, fala: (t) => itemDe(t, 'tecla') });
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: pecas.reiniciar,
@@ -222,7 +248,7 @@ export function montarCompletePalavra(a: CompletePalavra, ctx: Contexto): Contro
     a.opcoes.map((o) => ({ conteudo: o, certa: o === a.silabas[a.falta], classe: 'leitura' })),
     classeDasColunas(a.opcoes),
   );
-  ctx.area.append(el('div', { class: 'cartaz' }, palavra), botaoOuvirDeNovo(() => void ctx.falar(item)), grade);
+  ctx.area.append(el('div', { class: 'cartaz' }, palavra), botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), grade);
   const preencher = () => {
     lacuna.textContent = a.silabas[a.falta];
   };
@@ -253,7 +279,7 @@ export function montarFormePalavra(a: FormePalavra, ctx: Contexto): Controle {
     // Sílabas repetidas (CO + CO) podem vir em qualquer ordem: vale o resultado.
     confere: (m) => m.join('') === a.partes.join(''),
   });
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: pecas.reiniciar,
@@ -313,10 +339,11 @@ export function montarLeia(a: Leia, ctx: Contexto): Controle {
     caixa.append(el('div', { class: 'linha' }, ...spans));
   });
   const limparDestaque = () => linhas.flat().forEach((s) => s.classList.remove('lendo'));
-  const lerTudo = async () => {
+  const lerTudo = async (velocidade?: number) => {
     for (let i = 0; i < a.linhas.length; i++) {
       const antes = geracaoAtual();
       await ctx.falar(itemDe(a.linhas[i], 'frase'), {
+        velocidade,
         aoLerPalavra: (k) => {
           limparDestaque();
           linhas[i][k]?.classList.add('lendo');
@@ -326,14 +353,14 @@ export function montarLeia(a: Leia, ctx: Contexto): Controle {
     }
     limparDestaque();
   };
-  const ouvir = botaoOuvirDeNovo(() => void lerTudo());
+  const ouvir = botaoOuvirDeNovo((v) => void lerTudo(v));
   ctx.area.append(caixa, ouvir);
   return {
     modelo: async () => {
       await lerTudo();
       ctx.concluir();
     },
-    passosDemo: () => [() => ouvir],
+    passosDemo: () => [() => ouvir.querySelector<HTMLElement>('[data-ouvir-de-novo]')],
   };
 }
 
@@ -352,7 +379,7 @@ export function montarOrdene(a: Ordene, ctx: Contexto): Controle {
     separador: ' ',
   });
   pecas.grade.querySelectorAll('button').forEach((b) => (b.style.fontSize = '1.6rem'));
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), pecas.montagem.caixa, linhaDeApagar(pecas), pecas.grade);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: pecas.reiniciar,

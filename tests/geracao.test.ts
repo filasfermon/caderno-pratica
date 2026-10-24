@@ -15,7 +15,7 @@ describe('geração das atividades', () => {
   it('gera todos os tipos de atividade ao longo do caderno', () => {
     const tipos = new Set(todas().map((a) => a.tipo));
     const esperados: TipoAtividade[] = [
-      'conheca', 'escute_letra', 'diga_letra', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
+      'conheca', 'escute_letra', 'ouca_fale', 'escute_silaba', 'monte_silaba', 'complete_palavra', 'forme_palavra', 'quantas_silabas',
       'escute_palavra', 'escreva', 'complete_frase', 'ligue', 'leia', 'ordene', 'maiuscula',
       'conte', 'conta', 'pague', 'troco', 'da', 'hora',
     ];
@@ -128,7 +128,7 @@ describe('sessões', () => {
         expect(at.revisao, `aula ${a.aula}`).toBeFalsy();
         expect(at.aula).toBe(a.aula);
       }
-      const temOQueResponder = s.atividades.some((x) => !['conheca', 'leia', 'diga_letra'].includes(x.tipo));
+      const temOQueResponder = s.atividades.some((x) => !['conheca', 'leia', 'ouca_fale'].includes(x.tipo));
       if (temOQueResponder) expect(s.atividades.length, `aula ${a.aula}`).toBeGreaterThanOrEqual(8);
     }
   });
@@ -154,5 +154,27 @@ describe('sessões', () => {
         revisoes.add(r.chave);
       }
     expect(revisoes.size).toBeGreaterThan(3);
+  });
+});
+
+describe('Ouça e fale (sem gravação)', () => {
+  it('existe para letras (dita pelo nome), sílabas e palavras', () => {
+    const ouca = todas().filter((a) => a.tipo === 'ouca_fale');
+    const categorias = new Set(ouca.map((a) => (a.tipo === 'ouca_fale' ? a.categoria : '')));
+    expect([...categorias].sort()).toEqual(['letra', 'palavra', 'silaba']);
+    const p = gerarCandidatas(conteudo, aula(23), criarSorteio(1)).find((a) => a.tipo === 'ouca_fale' && a.categoria === 'letra');
+    expect(p && p.tipo === 'ouca_fale' && p.alvo).toBe('L');
+  });
+
+  it('nas aulas das vogais e "Aprenda", o da letra vem primeiro; no máximo 2 quando a aula tem bastante conteúdo', () => {
+    for (const n of [8, 9, 23, 24, 40]) {
+      const s = montarSessao(conteudo, aula(n), criarSorteio(n), 10);
+      const ouca = s.atividades.filter((a) => a.tipo === 'ouca_fale');
+      expect(ouca.length, `aula ${n}`).toBeGreaterThanOrEqual(1);
+      // Aulas do começo (só vogais) têm pouco conteúdo: a prática é completada com mais itens.
+      if (n >= 23) expect(ouca.length, `aula ${n}`).toBeLessThanOrEqual(2);
+      const temLetra = gerarCandidatas(conteudo, aula(n), criarSorteio(1)).some((a) => a.tipo === 'ouca_fale' && a.categoria === 'letra');
+      if (temLetra) expect(ouca[0].tipo === 'ouca_fale' && ouca[0].categoria, `aula ${n}`).toBe('letra');
+    }
   });
 });

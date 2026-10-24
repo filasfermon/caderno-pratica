@@ -13,8 +13,8 @@ export function audiosDaAtividade(a: Atividade): ItemAudio[] {
   switch (a.tipo) {
     case 'escute_letra':
       return [i('letra', a.alvo)];
-    case 'diga_letra':
-      return [i('tecla', a.alvo)];
+    case 'ouca_fale':
+      return [i(a.categoria === 'letra' ? 'tecla' : a.categoria, a.alvo)];
     case 'conheca': {
       const cat = a.categoria === 'par' || a.categoria === 'letra' ? 'letra' : a.categoria === 'silaba' ? 'silaba' : 'palavra';
       return [i(cat, a.alvo), ...(a.silabas && a.silabas.length > 1 ? a.silabas.map((s) => i('silaba', s)) : [])];

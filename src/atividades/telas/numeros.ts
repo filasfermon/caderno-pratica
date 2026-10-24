@@ -111,7 +111,7 @@ export function montarConta(a: Conta, ctx: Contexto): Controle {
     });
     ctx.area.append(ver, figura);
   }
-  ctx.area.append(botaoOuvirDeNovo(() => void ctx.falar(item)), teclado, pronto);
+  ctx.area.append(botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })), teclado, pronto);
   return {
     modelo: () => ctx.falar(item),
     reiniciar: () => {
@@ -275,7 +275,7 @@ export function montarDa(a: Da, ctx: Contexto): Controle {
     el('div', { class: 'etiqueta' }, 'NA MÃO:'),
     el('div', { class: 'dinheiro' }, ...decompor(a.naMao).map((v) => desenharDinheiro(v, 0.8))),
     el('p', { class: 'total' }, formatarReais(a.naMao)),
-    botaoOuvirDeNovo(() => void ctx.falar(item)),
+    botaoOuvirDeNovo((v) => void ctx.falar(item, { velocidade: v })),
     grade,
   );
   return {

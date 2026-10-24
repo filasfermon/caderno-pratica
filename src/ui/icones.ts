@@ -20,6 +20,18 @@ export const icones = {
   fechar: (t = 28) => base(t, svg('path', { d: 'M6 6l12 12M18 6L6 18', ...traco, 'stroke-width': 3 })),
   seguir: (t = 28) => base(t, svg('path', { d: 'M5 12h13M13 6l6 6-6 6', ...traco, 'stroke-width': 3 })),
   certo: (t = 28) => base(t, svg('path', { d: 'M4.5 12.5l5 5L19.5 7', ...traco, 'stroke-width': 3.2 })),
+  /** Tartaruga: o botão MAIS DEVAGAR. */
+  tartaruga: (t = 32) =>
+    base(
+      t,
+      svg('path', { d: 'M3.5 15.5C3.5 11 7 8 11 8s7.5 3 7.5 7.5z', fill: 'currentColor' }),
+      svg('path', { d: 'M7 15.5 9 11.5h4l2 4M9 11.5 11 8.6 13 11.5', fill: 'none', stroke: '#fff', 'stroke-width': 1.3, 'stroke-linejoin': 'round' }),
+      svg('circle', { cx: 20.6, cy: 13.4, r: 2.1, fill: 'currentColor' }),
+      svg('path', { d: 'M6 15.5v3M10 15.5v3M14 15.5v3M2 15l1.6.8', ...traco, 'stroke-width': 2.4 }),
+    ),
+  /** Balão de fala: AGORA FALE VOCÊ. */
+  falar: (t = 40) =>
+    base(t, svg('path', { d: 'M4 5h16v10H10l-4.5 4v-4H4z', ...traco }), svg('path', { d: 'M8.5 10h.01M12 10h.01M15.5 10h.01', ...traco, 'stroke-width': 3 })),
   apagar: (t = 28) =>
     base(t, svg('path', { d: 'M9 5h11v14H9l-6-7z', ...traco }), svg('path', { d: 'M12 9.5l5 5M17 9.5l-5 5', ...traco })),
   mao: (t = 64) =>

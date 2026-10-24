@@ -5,6 +5,7 @@ import { el, limpar } from './util/dom';
 import { icones } from './ui/icones';
 import type { Conteudo } from './conteudo/tipos';
 import { falarEmSequencia, pararFala } from './audio/voz';
+import { botaoMaisDevagar } from './atividades/telas/comum';
 
 let conteudo: Conteudo | null = null;
 
@@ -50,20 +51,17 @@ export function mostrarTela(titulo: string, ...filhos: (Node | null)[]): number 
   return numeroDaTela;
 }
 
-/** Botão grande de alto-falante: repete a instrução da tela. */
-export function botaoOuvir(texto: () => string | string[], rotulo = 'Ouvir de novo'): HTMLButtonElement {
+/** Alto-falante grande (repete a fala da tela) e, ao lado, a tartaruga (a mesma fala mais devagar). */
+export function botaoOuvir(texto: () => string | string[], rotulo = 'Ouvir de novo'): HTMLElement {
+  const tocar = (velocidade?: number) => {
+    const t = texto();
+    void falarEmSequencia((Array.isArray(t) ? t : [t]).map((x) => ({ categoria: 'instrucao' as const, texto: x })), { velocidade });
+  };
   return el(
-    'button',
-    {
-      type: 'button',
-      class: 'botao-ouvir',
-      'aria-label': rotulo,
-      onclick: () => {
-        const t = texto();
-        void falarEmSequencia((Array.isArray(t) ? t : [t]).map((x) => ({ categoria: 'instrucao' as const, texto: x })));
-      },
-    },
-    icones.altoFalante(34),
+    'div',
+    { class: 'ouvir' },
+    el('button', { type: 'button', class: 'botao-ouvir', 'aria-label': rotulo, onclick: () => tocar() }, icones.altoFalante(34)),
+    botaoMaisDevagar(tocar),
   );
 }
 

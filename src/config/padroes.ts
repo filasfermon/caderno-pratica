@@ -27,3 +27,12 @@ export const MOSTRAR_NUMEROS_E_DINHEIRO = true;
 
 /** Quantas atividades cada prática tem (de 8 a 12). */
 export const ATIVIDADES_POR_PRATICA = 10;
+
+/**
+ * Velocidade do botão da tartaruga (MAIS DEVAGAR), ao lado de cada alto-falante.
+ * Toca o mesmo áudio uma vez mais devagar (voz do celular e áudios prontos). Não fica guardado.
+ */
+export const VELOCIDADE_MAIS_DEVAGAR = 0.8;
+
+/** "Ouça e fale": quanto tempo o app espera o estudante falar, em milissegundos (cerca de 3 s). */
+export const PAUSA_PARA_FALAR_MS = 3000;

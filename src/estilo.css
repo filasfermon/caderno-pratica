@@ -221,6 +221,69 @@ button,
   gap: 16px;
 }
 
+/* Alto-falante + tartaruga (MAIS DEVAGAR) lado a lado */
+.ouvir {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.botao-devagar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--destaque-escuro);
+  background: var(--cartao);
+  color: var(--destaque-escuro);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 0;
+}
+.botao-devagar:active {
+  transform: translateY(2px);
+}
+.ouvir-de-novo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ouvir-de-novo > .botao {
+  flex: 1;
+}
+
+/* Ouça e fale: AGORA FALE VOCÊ (aviso calmo, sem números) */
+.fale-voce {
+  margin: 4px 0 0;
+  padding: 16px;
+  border-radius: var(--raio);
+  background: var(--verde-claro);
+  color: var(--verde);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.fale-voce .onda {
+  display: inline-flex;
+  animation: respirar 1.6s ease-in-out infinite;
+}
+@keyframes respirar {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
 /* ---------- Início ---------- */
 .inicio {
   flex: 1;

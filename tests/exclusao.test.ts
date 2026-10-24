@@ -40,12 +40,12 @@ describe('atividades de reconhecimento obrigatórias', () => {
     expect(alvo.map((a) => a.aula)).toEqual(expect.arrayContaining([8, 9, 10, 11, 13, 14, 15, 16, 18, 19, 21, 23, 25, 36, 59, 76, 78]));
     for (const a of alvo) {
       const tipos = new Set(atividadesDaAula(conteudo, a, criarSorteio(1)).map((x) => x.tipo));
-      for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(tipos, `aula ${a.aula}: ${t}`).toContain(t);
+      for (const t of ['escute_letra', 'escute_silaba', 'ouca_fale'] as const) expect(tipos, `aula ${a.aula}: ${t}`).toContain(t);
       // ...e os três aparecem de fato na sessão
       for (const modo of ['aula', 'revisao'] as const)
         for (let semente = 1; semente <= 3; semente++) {
           const naSessao = new Set(montarSessao(conteudo, a, criarSorteio(semente), 10, undefined, modo).atividades.filter((x) => !x.revisao).map((x) => x.tipo));
-          for (const t of ['escute_letra', 'escute_silaba', 'diga_letra'] as const) expect(naSessao, `sessão ${modo} aula ${a.aula}: ${t}`).toContain(t);
+          for (const t of ['escute_letra', 'escute_silaba', 'ouca_fale'] as const) expect(naSessao, `sessão ${modo} aula ${a.aula}: ${t}`).toContain(t);
         }
     }
   });

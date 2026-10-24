@@ -39,7 +39,7 @@ test('bolinhas, voltar, avançar, refazer e terminar', async ({ page }) => {
 
   // Responder uma atividade que tem resposta (as de só ouvir/falar não mostram resposta dada).
   // A ordem das atividades é sorteada: procura a primeira, a partir da 3.
-  const SO_OUVIR = ['conheca', 'leia', 'diga_letra'];
+  const SO_OUVIR = ['conheca', 'leia', 'ouca_fale'];
   let k = 2;
   await tocar(bolinhas.nth(k));
   while (SO_OUVIR.includes((await page.getAttribute('[data-sessao]', 'data-tipo')) ?? '')) await tocar(bolinhas.nth(++k));

@@ -17,8 +17,8 @@ export function instrucaoDe(a: Atividade): string {
           : 'Escute e leia.';
     case 'escute_letra':
       return 'Escute e toque a letra.';
-    case 'diga_letra':
-      return 'Diga o nome da letra.';
+    case 'ouca_fale':
+      return 'Ouça e fale.';
     case 'escute_silaba':
       return 'Qual é a sílaba?';
     case 'monte_silaba':
@@ -64,7 +64,7 @@ export const TODAS_AS_INSTRUCOES = [
   'Escute e leia a sílaba.',
   'Escute e leia.',
   'Escute e toque a letra.',
-  'Diga o nome da letra.',
+  'Ouça e fale.',
   'Qual é a sílaba?',
   'Forme a sílaba.',
   'Complete a palavra.',
